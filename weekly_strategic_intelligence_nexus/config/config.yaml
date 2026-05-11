@@ -1,0 +1,212 @@
+﻿project:
+  name: weekly_strategic_intelligence_reporter
+  output_language: pt
+  timezone: UTC
+  max_news: 50
+  report_title: "Relatório de Inteligência Semanal: Negócios, Infraestrutura e Gestão de Ativos"
+  report_theme: "light"
+  include_images: true
+  max_images: 8
+
+monitoring:
+  regions:
+    - Angola
+    - Portugal
+    - Brasil
+    - Emirados Arabes Unidos
+  region_aliases:
+    Angola: ["angola", "ao", "luanda"]
+    Portugal: ["portugal", "pt", "lisboa"]
+    Brasil: ["brasil", "brazil", "br", "sao paulo", "rio de janeiro", "brasilia"]
+    Emirados Arabes Unidos: ["dubai", "uae", "united arab emirates", "emirados arabes unidos", "abu dhabi"]
+
+  themes:
+    Economia:
+      - economia
+      - econômico
+      - economico
+      - macroeconomia
+      - pib
+      - inflação
+      - inflacao
+      - juros
+      - mercado
+      - indústria
+      - industria
+      - investimento
+      - economy
+      - economic
+      - gdp
+      - inflation
+      - market
+      - industry
+      - investment
+    Oportunidades:
+      - oportunidade
+      - licitação
+      - licitacao
+      - concessão
+      - concessao
+      - ppp
+      - contrato
+      - expansão
+      - expansao
+      - aquisição
+      - aquisicao
+      - compras
+      - infraestrutura
+      - saneamento
+      - facilities
+      - opportunity
+      - bid
+      - tender
+      - concession
+      - procurement
+      - contract
+      - expansion
+      - acquisition
+      - infrastructure
+
+  priority_keywords:
+    - saneamento
+    - facilities
+    - aquisição
+    - veiculos
+  associated_keywords:
+    - licitação
+    - concessão
+    - ppp
+    - investimento
+    - expansão
+    - frota
+    - infraestrutura
+    - obras
+    - serviços terceirizados
+    - compras corporativas
+    - aquisição de ativos
+    - novos contratos
+    - manutenção
+    - utilidades
+    - mobilidade operacional
+    - procurement
+    - tender
+    - concession
+    - outsourcing
+    - infrastructure
+    - fleet
+    - corporate purchase
+  negative_keywords: []
+
+  opportunity_signals:
+    expansao_mercado: ["expansão", "entrada em", "novo mercado", "ampliação"]
+    investimento: ["investimento", "capex", "aporte", "financiamento"]
+    licitacao: ["licitação", "edital", "pregão"]
+    concessao: ["concessão"]
+    ppp: ["ppp", "parceria público-privada", "parceria publico-privada"]
+    compra_publica: ["compra pública", "governo", "ministério", "secretaria"]
+    compra_privada: ["compra corporativa", "procurement", "fornecedor"]
+    aquisicao_ativos: ["aquisição de ativos", "asset deal", "compra de ativos"]
+    renovacao_frota: ["renovação de frota", "frota", "veículos"]
+    obras_infraestrutura: ["obras", "infraestrutura", "rodovia", "porto", "aeroporto"]
+    saneamento: ["saneamento", "água", "esgoto"]
+    facilities: ["facilities", "gestão predial", "manutenção predial"]
+    terceirizacao_servicos: ["terceirização", "serviços terceirizados", "outsourcing"]
+    parceria_estrategica: ["joint venture", "parceria estratégica", "acordo estratégico"]
+    abertura_regulatoria: ["marco regulatório", "regulação", "liberalização"]
+    aumento_demanda: ["aumento de demanda", "crescimento da demanda", "alta procura"]
+
+filters:
+  time_window_days: 7
+  accepted_languages: ["any"]
+  minimum_fields: ["title", "url", "published_at"]
+  min_text_length: 80
+
+deduplication:
+  title_similarity_threshold: 0.84
+  merge_window_hours: 72
+
+scoring:
+  weights:
+    recency: 0.15
+    region_fit: 0.15
+    theme_fit: 0.10
+    priority_keywords: 0.15
+    opportunity_signals: 0.15
+    economic_impact: 0.10
+    multi_source_recurrence: 0.10
+    entities: 0.05
+    strategic_applicability: 0.05
+
+sources:
+  - id: worldbank_news
+    type: rss
+    enabled: true
+    region_hint: "Global"
+    url: "https://www.worldbank.org/en/news/all?format=rss"
+  - id: european_commission_news
+    type: rss
+    enabled: true
+    region_hint: "Portugal"
+    url: "https://ec.europa.eu/commission/presscorner/api/rss"
+  - id: ifc_news
+    type: rss
+    enabled: true
+    region_hint: "Global"
+    url: "https://www.ifc.org/en/news?format=rss"
+  - id: african_development_bank
+    type: rss
+    enabled: true
+    region_hint: "Angola"
+    url: "https://www.afdb.org/en/news-and-events/press-releases/rss.xml"
+  - id: khaleej_times_business
+    type: rss
+    enabled: true
+    region_hint: "Emirados Arabes Unidos"
+    url: "https://www.khaleejtimes.com/feeds/business"
+  - id: valor_economico_rss
+    type: rss
+    enabled: true
+    region_hint: "Brasil"
+    url: "https://valor.globo.com/rss/"
+  - id: google_news_brasil_opportunities
+    type: rss
+    enabled: true
+    region_hint: "Brasil"
+    url: "https://news.google.com/rss/search?q=(Brasil+OR+Brazil)+(saneamento+OR+infrastructure+OR+procurement+OR+frota+OR+facilities)&hl=pt-BR&gl=BR&ceid=BR:pt-419"
+  - id: google_news_portugal_opportunities
+    type: rss
+    enabled: true
+    region_hint: "Portugal"
+    url: "https://news.google.com/rss/search?q=Portugal+(concessao+OR+licitacao+OR+PPP+OR+investimento+OR+infraestrutura)&hl=pt-PT&gl=PT&ceid=PT:pt-150"
+  - id: google_news_angola_opportunities
+    type: rss
+    enabled: true
+    region_hint: "Angola"
+    url: "https://news.google.com/rss/search?q=Angola+(investimento+OR+infraestrutura+OR+saneamento+OR+contratos)&hl=pt-PT&gl=PT&ceid=PT:pt-150"
+  - id: google_news_uae_dubai_opportunities
+    type: rss
+    enabled: true
+    region_hint: "Emirados Arabes Unidos"
+    url: "https://news.google.com/rss/search?q=(Dubai+OR+UAE+OR+%22United+Arab+Emirates%22)+(infrastructure+OR+procurement+OR+investment+OR+fleet+OR+facilities)&hl=en-US&gl=US&ceid=US:en"
+  - id: newsapi_business
+    type: newsapi
+    enabled: false
+    endpoint: "https://newsapi.org/v2/everything"
+    query: "(Angola OR Portugal OR Brazil OR Dubai OR \"United Arab Emirates\") AND (economy OR investment OR procurement OR infrastructure OR sanitation OR facilities)"
+    language: ""
+
+runtime:
+  output_dir: "output"
+  log_dir: "logs"
+  history_file: "data/history.json"
+  retries: 2
+  retry_backoff_seconds: 2
+  per_source_timeout_seconds: 20
+  log_level: "INFO"
+  keep_execution_history: true
+  scheduler:
+    day_of_week: "mon"
+    hour: 8
+    minute: 0
+    timezone: "America/Sao_Paulo"
+

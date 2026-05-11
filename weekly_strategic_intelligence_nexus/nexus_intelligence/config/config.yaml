@@ -1,0 +1,477 @@
+project:
+  name: nexus_intelligence
+  version: "2.0"
+  output_language: pt
+  timezone: America/Sao_Paulo
+  max_news: 80
+  report_title: "Nexus Intelligence — Radar Global de Notícias"
+  report_theme: dark
+  include_images: true
+  max_images: 12
+
+monitoring:
+  regions:
+    - Brasil
+    - Portugal
+    - Angola
+    - Emirados Arabes Unidos
+    - Global
+  region_aliases:
+    Brasil: ["brasil", "brazil", "br", "sao paulo", "rio de janeiro", "brasilia"]
+    Portugal: ["portugal", "pt", "lisboa", "porto"]
+    Angola: ["angola", "ao", "luanda"]
+    Emirados Arabes Unidos: ["dubai", "uae", "united arab emirates", "emirados", "abu dhabi"]
+    Global: ["global", "mundial", "world", "international"]
+
+  topics:
+    Economia & Finanças:
+      keywords: [economia, mercado, pib, inflação, juros, bolsa, investimento, fiscal, monetário, câmbio, economy, market, gdp, inflation, interest rate, investment, fiscal, monetary, currency, stocks]
+      color: "#10b981"
+      icon: "📈"
+    Tecnologia & IA:
+      keywords: [inteligência artificial, ia, machine learning, deep learning, llm, gpt, blockchain, cloud, cybersecurity, startup, venture capital, artificial intelligence, ai, tech, software, hardware, semiconductor]
+      color: "#6366f1"
+      icon: "🤖"
+    Infraestrutura & Energia:
+      keywords: [infraestrutura, energia, petróleo, gás, renovável, solar, eólico, porto, aeroporto, ferrovia, rodovia, infrastructure, energy, oil, gas, renewable, solar, wind, airport, railway, highway]
+      color: "#f59e0b"
+      icon: "⚡"
+    Geopolítica & Diplomacia:
+      keywords: [diplomacia, geopolítica, guerra, sanções, nato, onu, acordo, tratado, embaixada, diplomacy, geopolitics, war, sanctions, treaty, embassy, un, nato, conflict]
+      color: "#ef4444"
+      icon: "🌐"
+    Saúde & Ciência:
+      keywords: [saúde, medicina, vacina, pesquisa, ciência, farmacêutico, biotech, pandemia, health, medicine, vaccine, research, science, pharmaceutical, biotech, pandemic, clinical trial]
+      color: "#06b6d4"
+      icon: "🔬"
+    Oportunidades & Negócios:
+      keywords: [licitação, concessão, ppp, contrato, procurement, tender, bid, acquisition, merger, aquisição, fusão, parceria, joint venture, oportunidade, opportunity, facilities, outsourcing]
+      color: "#8b5cf6"
+      icon: "💼"
+    Clima & Sustentabilidade:
+      keywords: [clima, sustentabilidade, esg, carbono, emissões, verde, ambiental, climate, sustainability, carbon, emissions, green, environmental, cop, net zero]
+      color: "#22c55e"
+      icon: "🌱"
+
+  priority_keywords:
+    - licitação
+    - concessão
+    - ppp
+    - investimento
+    - infraestrutura
+    - saneamento
+    - facilities
+    - aquisição
+    - procurement
+    - tender
+    - concession
+
+  opportunity_signals:
+    licitacao: ["licitação", "edital", "pregão", "tender", "bid"]
+    concessao: ["concessão", "concession"]
+    ppp: ["ppp", "parceria público-privada", "public private partnership"]
+    aquisicao: ["aquisição", "acquisition", "merger", "fusão"]
+    investimento: ["investimento", "capex", "aporte", "investment", "funding"]
+    infraestrutura: ["infraestrutura", "infrastructure", "construction", "obras"]
+    saneamento: ["saneamento", "água", "esgoto", "sanitation", "water"]
+    energia: ["energia", "energy", "power", "geração"]
+
+filters:
+  time_window_days: 7
+  accepted_languages: ["any"]
+  minimum_fields: ["title", "url", "published_at"]
+  min_text_length: 60
+
+deduplication:
+  title_similarity_threshold: 0.82
+  merge_window_hours: 48
+
+scoring:
+  weights:
+    recency: 0.20
+    region_fit: 0.15
+    topic_fit: 0.10
+    priority_keywords: 0.15
+    opportunity_signals: 0.15
+    source_authority: 0.10
+    multi_source_recurrence: 0.10
+    entities: 0.05
+
+sources:
+  # ── BRASIL ──────────────────────────────────────────────
+  - id: valor_economico
+    type: rss
+    enabled: true
+    region_hint: Brasil
+    authority: 9
+    label: "Valor Econômico"
+    url: "https://valor.globo.com/rss/"
+
+  - id: folha_mercado
+    type: rss
+    enabled: true
+    region_hint: Brasil
+    authority: 9
+    label: "Folha de S.Paulo - Mercado"
+    url: "https://feeds.folha.uol.com.br/mercado/rss091.xml"
+
+  - id: estadao_economia
+    type: rss
+    enabled: true
+    region_hint: Brasil
+    authority: 9
+    label: "Estadão - Economia"
+    url: "https://www.estadao.com.br/rss/economia.xml"
+
+  - id: infomoney
+    type: rss
+    enabled: true
+    region_hint: Brasil
+    authority: 8
+    label: "InfoMoney"
+    url: "https://www.infomoney.com.br/feed/"
+
+  - id: google_news_brasil_negocios
+    type: rss
+    enabled: true
+    region_hint: Brasil
+    authority: 7
+    label: "Google News BR - Negócios"
+    url: "https://news.google.com/rss/search?q=Brasil+(licitação+OR+concessão+OR+investimento+OR+infraestrutura+OR+saneamento+OR+procurement)&hl=pt-BR&gl=BR&ceid=BR:pt-419"
+
+  - id: agencia_senado
+    type: rss
+    enabled: true
+    region_hint: Brasil
+    authority: 8
+    label: "Agência Senado"
+    url: "https://www12.senado.leg.br/noticias/rss/ultimas.xml"
+
+  - id: cnn_brasil
+    type: rss
+    enabled: true
+    region_hint: Brasil
+    authority: 8
+    label: "CNN Brasil"
+    url: "https://www.cnnbrasil.com.br/feed/"
+
+  # ── PORTUGAL ────────────────────────────────────────────
+  - id: publico_economia
+    type: rss
+    enabled: true
+    region_hint: Portugal
+    authority: 9
+    label: "Público - Economia"
+    url: "https://feeds.publico.pt/publico/economia"
+
+  - id: observador
+    type: rss
+    enabled: true
+    region_hint: Portugal
+    authority: 8
+    label: "Observador"
+    url: "https://observador.pt/feed/"
+
+  - id: jornalnoticias
+    type: rss
+    enabled: true
+    region_hint: Portugal
+    authority: 8
+    label: "Jornal de Notícias"
+    url: "https://www.jn.pt/rss/"
+
+  - id: google_news_portugal
+    type: rss
+    enabled: true
+    region_hint: Portugal
+    authority: 7
+    label: "Google News PT"
+    url: "https://news.google.com/rss/search?q=Portugal+(concessao+OR+licitacao+OR+PPP+OR+investimento+OR+infraestrutura)&hl=pt-PT&gl=PT&ceid=PT:pt-150"
+
+  # ── ANGOLA ──────────────────────────────────────────────
+  - id: angola_digital
+    type: rss
+    enabled: true
+    region_hint: Angola
+    authority: 7
+    label: "Angola Digital"
+    url: "https://angoladigital.net/feed/"
+
+  - id: google_news_angola
+    type: rss
+    enabled: true
+    region_hint: Angola
+    authority: 7
+    label: "Google News Angola"
+    url: "https://news.google.com/rss/search?q=Angola+(investimento+OR+infraestrutura+OR+saneamento+OR+contratos+OR+oil+OR+gas)&hl=pt-PT&gl=PT&ceid=PT:pt-150"
+
+  - id: afdb_africa
+    type: rss
+    enabled: true
+    region_hint: Angola
+    authority: 9
+    label: "African Development Bank"
+    url: "https://www.afdb.org/en/news-and-events/press-releases/rss.xml"
+
+  # ── EMIRADOS / ORIENTE MÉDIO ────────────────────────────
+  - id: khaleejtimes
+    type: rss
+    enabled: true
+    region_hint: Emirados Arabes Unidos
+    authority: 8
+    label: "Khaleej Times Business"
+    url: "https://www.khaleejtimes.com/feeds/business"
+
+  - id: zawya_uae
+    type: rss
+    enabled: true
+    region_hint: Emirados Arabes Unidos
+    authority: 8
+    label: "Zawya - UAE"
+    url: "https://www.zawya.com/rss/uaenews.xml"
+
+  - id: google_news_uae
+    type: rss
+    enabled: true
+    region_hint: Emirados Arabes Unidos
+    authority: 7
+    label: "Google News UAE"
+    url: "https://news.google.com/rss/search?q=(Dubai+OR+UAE+OR+%22United+Arab+Emirates%22)+(infrastructure+OR+procurement+OR+investment+OR+energy+OR+technology)&hl=en-US&gl=US&ceid=US:en"
+
+  # ── GLOBAL — ECONOMIA & FINANÇAS ───────────────────────
+  - id: reuters_business
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 10
+    label: "Reuters Business"
+    url: "https://feeds.reuters.com/reuters/businessNews"
+
+  - id: ft_world
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 10
+    label: "Financial Times - World"
+    url: "https://www.ft.com/rss/home/world"
+
+  - id: bloomberg_economics
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 10
+    label: "Bloomberg Markets"
+    url: "https://feeds.bloomberg.com/markets/news.rss"
+
+  - id: imf_news
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 10
+    label: "FMI - Notícias"
+    url: "https://www.imf.org/en/News/rss"
+
+  - id: worldbank_news
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 10
+    label: "World Bank News"
+    url: "https://www.worldbank.org/en/news/all?format=rss"
+
+  - id: ifc_news
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 9
+    label: "IFC - World Bank Group"
+    url: "https://www.ifc.org/en/news?format=rss"
+
+  # ── GLOBAL — TECNOLOGIA & IA ────────────────────────────
+  - id: techcrunch
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 9
+    label: "TechCrunch"
+    url: "https://techcrunch.com/feed/"
+
+  - id: wired
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 9
+    label: "Wired"
+    url: "https://www.wired.com/feed/rss"
+
+  - id: ars_technica
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 8
+    label: "Ars Technica"
+    url: "https://feeds.arstechnica.com/arstechnica/index"
+
+  - id: mit_tech_review
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 10
+    label: "MIT Technology Review"
+    url: "https://www.technologyreview.com/feed/"
+
+  - id: hackernews_top
+    type: hackernews
+    enabled: true
+    region_hint: Global
+    authority: 8
+    label: "Hacker News - Top"
+    endpoint: "https://hacker-news.firebaseio.com/v0/topstories.json"
+    max_items: 30
+
+  - id: the_verge
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 8
+    label: "The Verge"
+    url: "https://www.theverge.com/rss/index.xml"
+
+  - id: venturebeat_ai
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 8
+    label: "VentureBeat - AI"
+    url: "https://venturebeat.com/category/ai/feed/"
+
+  # ── GLOBAL — GEOPOLÍTICA ────────────────────────────────
+  - id: foreign_affairs
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 10
+    label: "Foreign Affairs"
+    url: "https://www.foreignaffairs.com/rss.xml"
+
+  - id: bbc_world
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 10
+    label: "BBC World News"
+    url: "https://feeds.bbci.co.uk/news/world/rss.xml"
+
+  - id: guardian_world
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 9
+    label: "The Guardian - World"
+    url: "https://www.theguardian.com/world/rss"
+
+  - id: ap_world
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 10
+    label: "AP News - World"
+    url: "https://rsshub.app/ap/topics/apf-worldnews"
+
+  # ── GLOBAL — CIÊNCIA ────────────────────────────────────
+  - id: nature_news
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 10
+    label: "Nature News"
+    url: "https://www.nature.com/news.rss"
+
+  - id: science_daily
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 9
+    label: "Science Daily"
+    url: "https://www.sciencedaily.com/rss/all.xml"
+
+  - id: nih_news
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 10
+    label: "NIH News"
+    url: "https://www.nih.gov/news-events/news-releases.rss"
+
+  # ── GLOBAL — CLIMA & ESG ────────────────────────────────
+  - id: carbon_brief
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 9
+    label: "Carbon Brief"
+    url: "https://www.carbonbrief.org/feed"
+
+  - id: renewable_energy_world
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 8
+    label: "Renewable Energy World"
+    url: "https://www.renewableenergyworld.com/feed/"
+
+  - id: google_news_esg
+    type: rss
+    enabled: true
+    region_hint: Global
+    authority: 7
+    label: "Google News - ESG"
+    url: "https://news.google.com/rss/search?q=(ESG+OR+sustainability+OR+\"net zero\"+OR+\"carbon neutral\")+(investment+OR+policy+OR+regulation)&hl=en-US&gl=US&ceid=US:en"
+
+  # ── REDDIT ──────────────────────────────────────────────
+  - id: reddit_worldnews
+    type: reddit
+    enabled: true
+    region_hint: Global
+    authority: 6
+    label: "Reddit r/worldnews"
+    subreddit: worldnews
+    sort: hot
+    max_items: 25
+
+  - id: reddit_investing
+    type: reddit
+    enabled: true
+    region_hint: Global
+    authority: 6
+    label: "Reddit r/investing"
+    subreddit: investing
+    sort: hot
+    max_items: 20
+
+  - id: reddit_economics
+    type: reddit
+    enabled: true
+    region_hint: Global
+    authority: 6
+    label: "Reddit r/economics"
+    subreddit: Economics
+    sort: hot
+    max_items: 20
+
+runtime:
+  output_dir: "output"
+  log_dir: "logs"
+  history_file: "data/history.json"
+  retries: 3
+  retry_backoff_seconds: 2
+  per_source_timeout_seconds: 25
+  log_level: "INFO"
+  keep_execution_history: true
+  max_concurrent_sources: 10
+  webapp_port: 8788
+  scheduler:
+    day_of_week: "mon"
+    hour: 7
+    minute: 30
+    timezone: "America/Sao_Paulo"

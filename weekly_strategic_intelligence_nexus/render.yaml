@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: weekly-strategic-intelligence-nexus
+    runtime: docker
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /
+    envVars:
+      - key: NEWS_OPEN_BROWSER
+        value: "0"
+      - key: NEWS_WEBAPP_PORT
+        value: "8787"

@@ -1,0 +1,10 @@
+.venv/
+.venv311_portable/
+build/
+dist/
+logs/
+output/
+data/
+.env
+__pycache__/
+*.pyc

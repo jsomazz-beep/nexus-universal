@@ -1,0 +1,13 @@
+﻿# Byte-compiled / cache
+__pycache__/
+*.pyc
+
+# Runtime artifacts
+logs/
+output/
+data/
+
+# Local env / vcs
+.venv/
+.git/
+.gitignore

@@ -1,0 +1,23 @@
+﻿services:
+  weekly-reporter:
+    build: .
+    image: weekly-news-reporter:latest
+    volumes:
+      - ./config:/app/config
+      - ./output:/app/output
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./.env:/app/.env:ro
+    command: ["python", "src/main.py", "--config", "config/config.yaml", "--env-file", ".env"]
+
+  weekly-reporter-scheduler:
+    build: .
+    image: weekly-news-reporter:latest
+    restart: unless-stopped
+    volumes:
+      - ./config:/app/config
+      - ./output:/app/output
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./.env:/app/.env:ro
+    command: ["python", "src/scheduler.py", "--config", "config/config.yaml", "--env-file", ".env", "--run-now"]

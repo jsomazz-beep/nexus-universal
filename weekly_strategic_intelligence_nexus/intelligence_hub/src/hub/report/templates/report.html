@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="{{ theme }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ title }} — {{ generated_at }}</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   Intelligence Hub — Modern Report Template
+   Themes: dark (default), light, boardroom
+════════════════════════════════════════════════════════════════ */
+:root {
+  --accent: #6366f1;
+  --accent2: #06b6d4;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --radius: 12px;
+  --gap: 1.2rem;
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --mono: 'Cascadia Code', 'Fira Code', monospace;
+}
+
+[data-theme="dark"] {
+  --bg: #0f1117;
+  --surface: #1a1d2e;
+  --surface2: #252840;
+  --surface3: #2e3250;
+  --border: rgba(255,255,255,0.08);
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+  --header-bg: linear-gradient(135deg, #0f1117 0%, #1a1d2e 100%);
+  --card-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --tag-bg: rgba(99,102,241,0.15);
+  --tag-color: #a5b4fc;
+}
+
+[data-theme="light"] {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface2: #f1f5f9;
+  --surface3: #e2e8f0;
+  --border: rgba(0,0,0,0.08);
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --text-faint: #94a3b8;
+  --header-bg: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  --card-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --tag-bg: rgba(99,102,241,0.1);
+  --tag-color: #4f46e5;
+}
+
+[data-theme="boardroom"] {
+  --bg: #fefefe;
+  --surface: #ffffff;
+  --surface2: #f9f9f9;
+  --surface3: #eeeeee;
+  --border: rgba(0,0,0,0.1);
+  --text: #1a1a1a;
+  --text-muted: #555555;
+  --text-faint: #888888;
+  --header-bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  --card-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  --tag-bg: #eeeeee;
+  --tag-color: #333333;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+
+/* ── Topbar ── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center; gap: 1rem;
+  padding: 0.6rem 1.5rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+.topbar-brand { font-weight: 700; font-size: 1rem; color: var(--accent); letter-spacing: -0.3px; }
+.topbar-meta { font-size: 0.75rem; color: var(--text-muted); margin-left: auto; }
+.theme-toggle {
+  cursor: pointer; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.3rem 0.7rem;
+  font-size: 0.75rem; color: var(--text-muted);
+  transition: all 0.2s;
+}
+.theme-toggle:hover { background: var(--surface3); color: var(--text); }
+
+/* ── Layout ── */
+.main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 80px 1.5rem 3rem;
+}
+
+/* ── Header hero ── */
+.hero {
+  background: var(--header-bg);
+  border-radius: var(--radius);
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 70% 50%, rgba(99,102,241,0.2) 0%, transparent 70%);
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(99,102,241,0.2);
+  border: 1px solid rgba(99,102,241,0.4);
+  border-radius: 100px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: #a5b4fc;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+.hero h1 {
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  margin-bottom: 0.75rem;
+}
+.hero-sub { color: rgba(255,255,255,0.65); font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+/* ── KPI strip ── */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+}
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.2rem;
+  box-shadow: var(--card-shadow);
+  text-align: center;
+}
+.kpi-value {
+  font-size: 2rem; font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+.kpi-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── Síntese ── */
+.synthesis-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--card-shadow);
+}
+.synthesis-title {
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--accent); margin-bottom: 0.75rem;
+}
+.synthesis-text { color: var(--text); line-height: 1.7; }
+
+/* ── Seção ── */
+.section { margin-bottom: 2.5rem; }
+.section-header {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.section-title {
+  font-size: 1.1rem; font-weight: 700;
+  color: var(--text); letter-spacing: -0.3px;
+}
+.section-count {
+  background: var(--tag-bg);
+  color: var(--tag-color);
+  padding: 0.15rem 0.5rem;
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* ── Filtros ── */
+.filters-bar {
+  display: flex; gap: 0.5rem; flex-wrap: wrap;
+  margin-bottom: 1.2rem; align-items: center;
+}
+.filter-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font);
+}
+.filter-btn:hover, .filter-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.search-box {
+  margin-left: auto;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text);
+  outline: none;
+  font-family: var(--font);
+  width: 200px;
+}
+.search-box:focus { border-color: var(--accent); }
+
+/* ── Grid de cards ── */
+.news-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--gap);
+}
+
+/* ── Card ── */
+.news-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  display: flex; flex-direction: column;
+  cursor: pointer;
+}
+.news-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  border-color: var(--accent);
+}
+.news-card.highlight { border-left: 3px solid var(--warning); }
+.news-card.opportunity { border-left: 3px solid var(--success); }
+.news-card.critical { border-left: 3px solid var(--danger); }
+
+.card-image {
+  width: 100%; height: 160px;
+  object-fit: cover;
+  background: var(--surface2);
+}
+.card-image-placeholder {
+  width: 100%; height: 100px;
+  background: linear-gradient(135deg, var(--surface2) 0%, var(--surface3) 100%);
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  overflow: hidden;
+  position: relative;
+}
+.card-favicon {
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  object-fit: contain;
+  flex-shrink: 0;
+  background: var(--surface);
+  padding: 4px;
+}
+.card-placeholder-label {
+  display: flex; flex-direction: column; gap: 2px; overflow: hidden;
+}
+.card-placeholder-icon { font-size: 1.4rem; line-height: 1; }
+.card-placeholder-domain {
+  font-size: 0.6rem; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.card-translated {
+  font-size: 0.6rem; font-weight: 600; padding: 1px 5px;
+  background: rgba(99,102,241,0.18); color: #818cf8;
+  border-radius: 4px; white-space: nowrap;
+}
+.card-body { padding: 1rem 1.1rem; flex: 1; display: flex; flex-direction: column; }
+
+.card-header { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem; align-items: center; }
+.card-source {
+  font-size: 0.65rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--accent2);
+}
+.card-region {
+  font-size: 0.65rem; color: var(--text-faint);
+  background: var(--surface2);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+.card-score {
+  margin-left: auto;
+  font-size: 0.65rem; font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 100px;
+}
+.score-high { background: rgba(16,185,129,0.15); color: #10b981; }
+.score-mid  { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.score-low  { background: rgba(148,163,184,0.1); color: #94a3b8; }
+
+.card-title {
+  font-size: 0.92rem; font-weight: 600;
+  color: var(--text); line-height: 1.4;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-content {
+  font-size: 0.78rem; color: var(--text-muted);
+  line-height: 1.5;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-footer {
+  margin-top: 0.8rem;
+  display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+}
+.card-date { font-size: 0.65rem; color: var(--text-faint); margin-left: auto; }
+.card-tag {
+  font-size: 0.6rem; padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  background: var(--tag-bg); color: var(--tag-color);
+  font-weight: 600;
+}
+.opp-badge {
+  font-size: 0.6rem; padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(16,185,129,0.12); color: #10b981;
+  font-weight: 700;
+}
+.multi-badge {
+  font-size: 0.6rem; padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(6,182,212,0.12); color: #06b6d4;
+  font-weight: 700;
+}
+
+/* ── Distribuição por fonte ── */
+.source-chart { margin-bottom: 2rem; }
+.source-bar-row {
+  display: flex; align-items: center; gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+.source-bar-name { font-size: 0.75rem; color: var(--text-muted); width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.source-bar-track {
+  flex: 1; background: var(--surface2);
+  border-radius: 100px; height: 8px; overflow: hidden;
+}
+.source-bar-fill {
+  height: 100%; border-radius: 100px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transition: width 0.8s ease;
+}
+.source-bar-count { font-size: 0.7rem; color: var(--text-faint); width: 30px; text-align: right; }
+
+/* ── Top Oportunidades ── */
+.opp-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.opp-item {
+  display: flex; gap: 0.75rem; align-items: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--success);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  box-shadow: var(--card-shadow);
+}
+.opp-rank {
+  font-size: 1.1rem; font-weight: 800;
+  color: var(--success);
+  min-width: 28px;
+}
+.opp-title { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+.opp-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+/* ── Footer ── */
+.report-footer {
+  margin-top: 3rem; padding: 2rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}
+
+/* ── Modal ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 999;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  align-items: center; justify-content: center; padding: 1rem;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border-radius: var(--radius);
+  max-width: 680px; width: 100%; max-height: 85vh;
+  overflow-y: auto; padding: 2rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  border: 1px solid var(--border);
+}
+.modal-close {
+  float: right; cursor: pointer; font-size: 1.2rem;
+  color: var(--text-muted); background: none; border: none;
+  padding: 0.2rem; line-height: 1;
+}
+
+/* ── Print ── */
+@media print {
+  .topbar, .theme-toggle, .filters-bar, .modal-overlay { display: none !important; }
+  body { background: white; color: black; }
+  .news-card { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .news-grid { grid-template-columns: 1fr; }
+  .hero { padding: 1.5rem; }
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Animations ── */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.news-card { animation: fadeIn 0.3s ease both; }
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <span class="topbar-brand">⬡ Intelligence Hub</span>
+  <span style="font-size:0.75rem; color:var(--text-muted)">{{ title }}</span>
+  <span class="topbar-meta">{{ generated_at }} · {{ total_items }} notícias</span>
+  <button class="theme-toggle" onclick="cycleTheme()">🎨 Tema</button>
+  <button class="theme-toggle" onclick="window.print()">🖨 Imprimir</button>
+</div>
+
+<div class="main">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">⬡ Strategic Intelligence Report</div>
+    <h1>{{ title }}</h1>
+    <div class="hero-sub">Gerado em {{ generated_at }} · Janela de {{ time_window_days }} dias · {{ source_count }} fontes ativas</div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-value">{{ total_items }}</div>
+      <div class="kpi-label">Notícias curadas</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-value">{{ source_count }}</div>
+      <div class="kpi-label">Fontes ativas</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-value">{{ opp_count }}</div>
+      <div class="kpi-label">Oportunidades</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-value">{{ region_count }}</div>
+      <div class="kpi-label">Regiões</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-value">{{ critical_count }}</div>
+      <div class="kpi-label">Alertas críticos</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-value">{{ run_duration }}s</div>
+      <div class="kpi-label">Tempo coleta</div>
+    </div>
+  </div>
+
+  <!-- Síntese -->
+  <div class="synthesis-card">
+    <div class="synthesis-title">◈ Síntese executiva</div>
+    <div class="synthesis-text">{{ synthesis }}</div>
+    {% if key_signals %}
+    <div style="margin-top:1rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
+      {% for signal in key_signals %}
+      <span class="card-tag">🔑 {{ signal[:80] }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Top Oportunidades -->
+  {% if opportunity_items %}
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">🟢 Top Oportunidades de Negócio</span>
+      <span class="section-count">{{ opportunity_items | length }}</span>
+    </div>
+    <div class="opp-list">
+      {% for item in opportunity_items[:8] %}
+      <div class="opp-item" onclick="openModal('{{ item.id }}')">
+        <span class="opp-rank">#{{ loop.index }}</span>
+        <div>
+          <div class="opp-title">{{ item.title }}</div>
+          <div class="opp-meta">
+            {{ item.source_name }} · {{ item.region }} ·
+            Score: <strong>{{ "%.2f"|format(item.score) }}</strong>
+            {% if item.opportunity_signals %}
+            · Sinais: {% for sig in item.opportunity_signals.keys() %}{{ sig }}{% if not loop.last %}, {% endif %}{% endfor %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Distribuição por fonte -->
+  <div class="section source-chart">
+    <div class="section-header">
+      <span class="section-title">📡 Distribuição por Fonte</span>
+    </div>
+    {% for src_name, src_count in source_distribution %}
+    <div class="source-bar-row">
+      <span class="source-bar-name" title="{{ src_name }}">{{ src_name }}</span>
+      <div class="source-bar-track">
+        <div class="source-bar-fill" style="width:{{ [src_count * 100 // (source_max or 1), 100]|min }}%"></div>
+      </div>
+      <span class="source-bar-count">{{ src_count }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Notícias por categoria -->
+  {% for category, cat_items in items_by_category.items() %}
+  <div class="section" id="cat-{{ category|replace(' ', '-') }}">
+    <div class="section-header">
+      <span class="section-title">{{ category_icons.get(category, '📰') }} {{ category }}</span>
+      <span class="section-count">{{ cat_items | length }}</span>
+    </div>
+    <div class="filters-bar">
+      {% for region in all_regions %}
+      <button class="filter-btn" data-region="{{ region }}" data-cat="{{ category }}" onclick="filterByRegion(this)">{{ region }}</button>
+      {% endfor %}
+      <input class="search-box" type="text" placeholder="🔍 buscar nesta categoria..." oninput="searchCards(this, '{{ category }}')" />
+    </div>
+    <div class="news-grid" id="grid-{{ category|replace(' ', '-') }}">
+      {% for item in cat_items %}
+      <div class="news-card {% if item.score >= 0.85 %}critical{% elif item.opportunity_signals %}opportunity{% elif item.merged_count > 1 %}highlight{% endif %}"
+           data-id="{{ item.id }}"
+           data-region="{{ item.region }}"
+           data-cat="{{ category }}"
+           onclick="openModal('{{ item.id }}')">
+        {% if item.image_url %}
+        <img class="card-image" src="{{ item.image_url }}" alt="" loading="lazy"
+             onerror="if(this.dataset.retry!='1'){this.dataset.retry='1';this.src='https://picsum.photos/seed/{{ item.id[:8] }}/800/450';}else{this.style.display='none';}">
+        {% else %}
+        <div class="card-image-placeholder">
+          {% if item.raw.url_domain %}
+          <img class="card-favicon" loading="lazy"
+               src="https://www.google.com/s2/favicons?domain={{ item.raw.url_domain }}&sz=64"
+               onerror="this.style.display='none'" alt="">
+          {% endif %}
+          <div class="card-placeholder-label">
+            <span class="card-placeholder-icon">{{ category_icons.get(category, '📰') }}</span>
+            {% if item.raw.url_domain %}
+            <span class="card-placeholder-domain">{{ item.raw.url_domain }}</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+        <div class="card-body">
+          <div class="card-header">
+            <span class="card-source">{{ item.source_type.upper() }}</span>
+            {% if item.region %}<span class="card-region">{{ item.region }}</span>{% endif %}
+            {% if item.raw.get('translated') %}<span class="card-translated" title="Traduzido de {{ item.raw.get('original_lang','?')|upper }}">🌐 PT</span>{% endif %}
+            <span class="card-score {% if item.score >= 0.75 %}score-high{% elif item.score >= 0.45 %}score-mid{% else %}score-low{% endif %}">
+              {{ "%.0f"|format(item.score * 100) }}%
+            </span>
+          </div>
+          <h3 class="card-title">{{ item.title }}</h3>
+          {% if item.content %}
+          <p class="card-content">{{ item.content[:300] }}</p>
+          {% endif %}
+          <div class="card-footer">
+            {% for cat in item.categories[:2] %}<span class="card-tag">{{ cat }}</span>{% endfor %}
+            {% if item.opportunity_signals %}<span class="opp-badge">⚡ oportunidade</span>{% endif %}
+            {% if item.merged_count > 1 %}<span class="multi-badge">{{ item.merged_count }}× fontes</span>{% endif %}
+            <span class="card-date">{{ item.published_at_fmt }}</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <!-- Rodapé -->
+  <div class="report-footer">
+    <p><strong>Intelligence Hub v2.0</strong> · Gerado em {{ generated_at }}</p>
+    <p style="margin-top:0.4rem">{{ total_collected }} coletados → {{ total_filtered }} filtrados → {{ total_deduped }} deduplicados → {{ total_items }} aprovados</p>
+    {% if source_errors %}
+    <p style="margin-top:0.4rem; color: var(--warning)">
+      ⚠ Fontes com erro ({{ source_errors | length }}):
+      {% for src_id, err in source_errors.items() %}{{ src_id }}{% if not loop.last %}, {% endif %}{% endfor %}
+    </p>
+    {% endif %}
+  </div>
+
+</div><!-- /main -->
+
+<!-- Modal de detalhe -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-content">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- Dados JSON embutidos para interatividade -->
+<script>
+const ALL_ITEMS = {{ items_json }};
+
+const ITEMS_MAP = {};
+ALL_ITEMS.forEach(it => { ITEMS_MAP[it.id] = it; });
+
+// ── Tema ──────────────────────────────────────────────────────────────────
+const THEMES = ['dark', 'light', 'boardroom'];
+let themeIdx = THEMES.indexOf(document.documentElement.getAttribute('data-theme')) || 0;
+function cycleTheme() {
+  themeIdx = (themeIdx + 1) % THEMES.length;
+  document.documentElement.setAttribute('data-theme', THEMES[themeIdx]);
+  localStorage.setItem('hub-theme', THEMES[themeIdx]);
+}
+(function() {
+  const saved = localStorage.getItem('hub-theme');
+  if (saved && THEMES.includes(saved)) {
+    document.documentElement.setAttribute('data-theme', saved);
+    themeIdx = THEMES.indexOf(saved);
+  }
+})();
+
+// ── Filtro por região ─────────────────────────────────────────────────────
+function filterByRegion(btn) {
+  const region = btn.dataset.region;
+  const cat = btn.dataset.cat;
+  const gridId = 'grid-' + cat.replace(/ /g, '-');
+  const grid = document.getElementById(gridId);
+  const cards = grid ? grid.querySelectorAll('.news-card') : [];
+  const siblings = btn.parentElement.querySelectorAll('.filter-btn');
+  const isActive = btn.classList.contains('active');
+  siblings.forEach(b => b.classList.remove('active'));
+  if (isActive) {
+    cards.forEach(c => c.style.display = '');
+    return;
+  }
+  btn.classList.add('active');
+  cards.forEach(c => {
+    c.style.display = (c.dataset.region === region) ? '' : 'none';
+  });
+}
+
+// ── Busca ─────────────────────────────────────────────────────────────────
+function searchCards(input, cat) {
+  const q = input.value.toLowerCase();
+  const gridId = 'grid-' + cat.replace(/ /g, '-');
+  const grid = document.getElementById(gridId);
+  const cards = grid ? grid.querySelectorAll('.news-card') : [];
+  cards.forEach(c => {
+    const id = c.dataset.id;
+    const item = ITEMS_MAP[id];
+    if (!item) return;
+    const text = (item.title + ' ' + item.content).toLowerCase();
+    c.style.display = (!q || text.includes(q)) ? '' : 'none';
+  });
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────
+function openModal(id) {
+  const item = ITEMS_MAP[id];
+  if (!item) return;
+  const score = (item.score * 100).toFixed(0);
+  const scoreClass = item.score >= 0.75 ? 'score-high' : item.score >= 0.45 ? 'score-mid' : 'score-low';
+  const oppHtml = item.opportunity_signals && Object.keys(item.opportunity_signals).length > 0
+    ? `<div style="margin-top:1rem"><strong style="font-size:0.8rem;color:var(--success)">⚡ Sinais de Oportunidade:</strong>
+       <div style="margin-top:0.4rem;display:flex;flex-wrap:wrap;gap:0.4rem;">
+       ${Object.keys(item.opportunity_signals).map(k => `<span class="opp-badge">${k}</span>`).join('')}
+       </div></div>`
+    : '';
+  const catHtml = (item.categories||[]).map(c => `<span class="card-tag">${c}</span>`).join('');
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:flex;gap:0.6rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
+      <span class="card-source">${item.source_type?.toUpperCase() || ''}</span>
+      ${item.region ? `<span class="card-region">${item.region}</span>` : ''}
+      <span class="card-score ${scoreClass}">${score}%</span>
+      ${item.merged_count > 1 ? `<span class="multi-badge">${item.merged_count}× fontes</span>` : ''}
+    </div>
+    ${item.image_url ? `<img src="${item.image_url}" style="width:100%;border-radius:8px;margin-bottom:1rem;max-height:250px;object-fit:cover" onerror="this.style.display='none'">` : ''}
+    <h2 style="font-size:1.1rem;font-weight:700;line-height:1.4;color:var(--text);margin-bottom:0.5rem">${item.title}</h2>
+    <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:1rem">
+      ${item.source_name || ''} ${item.author ? '· ' + item.author : ''} · ${item.published_at_fmt || ''}
+    </div>
+    ${item.content ? `<p style="font-size:0.85rem;line-height:1.7;color:var(--text-muted);margin-bottom:1rem">${item.content}</p>` : ''}
+    <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1rem">${catHtml}</div>
+    ${oppHtml}
+    <div style="margin-top:1.5rem">
+      <a href="${item.url}" target="_blank" rel="noopener"
+         style="display:inline-flex;align-items:center;gap:0.4rem;background:var(--accent);color:#fff;
+                padding:0.6rem 1.2rem;border-radius:8px;font-size:0.85rem;font-weight:600;
+                text-decoration:none;transition:opacity 0.2s"
+         onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+        🔗 Ler artigo completo
+      </a>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(event) {
+  if (event && event.target !== document.getElementById('modal-overlay') &&
+      !event.target.classList.contains('modal-close')) return;
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal({ target: document.getElementById('modal-overlay') });
+});
+
+// ── Animação staggered ────────────────────────────────────────────────────
+document.querySelectorAll('.news-card').forEach((card, i) => {
+  card.style.animationDelay = (i * 0.04) + 's';
+});
+</script>
+</body>
+</html>

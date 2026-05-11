@@ -1,0 +1,519 @@
+# =====================================================================
+#  Intelligence Hub v2.0 — Configuração Principal
+#  Copie para config.yaml e ajuste conforme necessário
+# =====================================================================
+
+project:
+  name: intelligence_hub
+  output_language: pt
+  timezone: UTC
+  max_news: 60
+  report_title: "Strategic Intelligence Hub — Negócios, Infraestrutura e Oportunidades"
+  report_theme: "dark"            # dark | light | boardroom
+
+monitoring:
+  regions:
+    - Angola
+    - Portugal
+    - Brasil
+    - Emirados Arabes Unidos
+    - África
+
+  region_aliases:
+    Angola:          ["angola", "ao", "luanda", "angola investment"]
+    Portugal:        ["portugal", "pt", "lisboa", "porto"]
+    Brasil:          ["brasil", "brazil", "br", "são paulo", "rio de janeiro", "brasília"]
+    Emirados Arabes Unidos: ["dubai", "uae", "united arab emirates", "emirados", "abu dhabi"]
+    África:          ["africa", "african", "sub-saharan", "moçambique", "mozambique", "kenya",
+                      "nigeria", "ghana", "south africa", "africa do sul"]
+
+  themes:
+    Economia:
+      - economia
+      - economic
+      - pib
+      - gdp
+      - inflação
+      - inflation
+      - juros
+      - interest rate
+      - mercado
+      - market
+      - investimento
+      - investment
+      - crescimento
+      - growth
+      - recessão
+      - recession
+
+    Oportunidades:
+      - licitação
+      - tender
+      - concession
+      - concessão
+      - ppp
+      - procurement
+      - contrato
+      - contract
+      - oportunidade
+      - opportunity
+      - bid
+      - rfp
+      - edital
+
+    Infraestrutura:
+      - infraestrutura
+      - infrastructure
+      - rodovia
+      - highway
+      - porto
+      - port
+      - aeroporto
+      - airport
+      - saneamento
+      - sanitation
+      - água
+      - water
+      - energia
+      - energy
+      - grid
+      - pipeline
+
+    Energia:
+      - energia
+      - energy
+      - petróleo
+      - oil
+      - gás
+      - gas
+      - renovável
+      - renewable
+      - solar
+      - wind
+      - hidro
+      - hydro
+      - transição energética
+      - energy transition
+
+    Tecnologia:
+      - tecnologia
+      - technology
+      - IA
+      - artificial intelligence
+      - machine learning
+      - digitalização
+      - digital transformation
+      - startup
+      - fintech
+      - data center
+
+    Mercado Financeiro:
+      - bolsa
+      - stock
+      - ação
+      - share
+      - bonds
+      - dívida
+      - debt
+      - câmbio
+      - exchange rate
+      - forex
+      - crypto
+      - bitcoin
+
+    Geopolítica:
+      - geopolítica
+      - geopolitics
+      - sanção
+      - sanction
+      - diplomacia
+      - diplomacy
+      - guerra
+      - war
+      - conflito
+      - conflict
+      - crise
+      - crisis
+
+    Facilities & Serviços:
+      - facilities
+      - gestão predial
+      - building management
+      - manutenção
+      - maintenance
+      - terceirização
+      - outsourcing
+      - frota
+      - fleet management
+
+  priority_keywords:
+    - saneamento
+    - facilities
+    - licitação
+    - concessão
+    - frota
+    - infraestrutura
+
+  associated_keywords:
+    - procurement
+    - tender
+    - investment
+    - infrastructure
+    - contract
+    - concession
+    - fleet
+    - outsourcing
+
+  negative_keywords:
+    - entretenimento
+    - esporte
+    - futebol
+    - celebrity
+    - moda
+
+  opportunity_signals:
+    licitacao:          ["licitação", "edital", "pregão", "tender", "bid"]
+    concessao:          ["concessão", "concession", "ppk"]
+    ppp:                ["ppp", "parceria público-privada", "public private partnership"]
+    investimento:       ["investimento", "capex", "aporte", "funding", "investment"]
+    aquisicao:          ["aquisição", "acquisition", "m&a", "merger", "takeover"]
+    obras_infra:        ["obras", "infraestrutura", "rodovia", "porto", "aeroporto", "pipeline"]
+    saneamento:         ["saneamento", "água", "esgoto", "water treatment"]
+    facilities:         ["facilities", "gestão predial", "manutenção predial"]
+    renovacao_frota:    ["frota", "veículos", "fleet", "vehicles"]
+    outsourcing:        ["terceirização", "outsourcing", "serviços terceirizados"]
+    expansao:           ["expansão", "crescimento", "novo mercado", "market expansion"]
+    parceria:           ["joint venture", "parceria estratégica", "strategic partnership"]
+    marco_regulatorio:  ["marco regulatório", "regulação", "liberalização", "regulatory"]
+
+# ── Filtros ────────────────────────────────────────────────────────────
+filters:
+  time_window_days: 7
+  accepted_languages: ["any"]
+  min_text_length: 40
+  blocked_domains:
+    - "spam.com"
+
+# ── Deduplicação ───────────────────────────────────────────────────────
+deduplication:
+  title_similarity_threshold: 0.70
+  url_exact_match: true
+
+# ── Scoring ────────────────────────────────────────────────────────────
+scoring:
+  weights:
+    recency:           0.20
+    region_fit:        0.18
+    theme_fit:         0.15
+    priority_keywords: 0.15
+    opportunity_signals: 0.15
+    multi_source:      0.10
+    content_quality:   0.05
+    engagement:        0.02
+
+# ── Runtime ────────────────────────────────────────────────────────────
+runtime:
+  output_dir: "output"
+  log_dir: "logs"
+  db_path: "data/hub.db"
+  parallel_workers: 12
+  per_source_timeout_seconds: 20
+  log_level: "INFO"
+  scheduler:
+    day_of_week: "mon"
+    hour: 7
+    minute: 30
+    timezone: "America/Sao_Paulo"
+
+# ══════════════════════════════════════════════════════════════════════
+#  FONTES DE NOTÍCIAS — 30+ fontes de 7 tipos diferentes
+# ══════════════════════════════════════════════════════════════════════
+sources:
+
+  # ── GDELT Project (sem API key) ──────────────────────────────────────
+  - id: gdelt_angola_infra
+    type: gdelt
+    enabled: true
+    name: "GDELT — Angola Infraestrutura"
+    region_hint: "Angola"
+    query: "Angola infrastructure investment procurement"
+    timespan: "7d"
+    max_records: 50
+
+  - id: gdelt_brasil_oportunidades
+    type: gdelt
+    enabled: true
+    name: "GDELT — Brasil Oportunidades"
+    region_hint: "Brasil"
+    query: "Brazil infrastructure procurement licitacao concession investment"
+    timespan: "7d"
+    max_records: 50
+
+  - id: gdelt_uae_business
+    type: gdelt
+    enabled: true
+    name: "GDELT — UAE Negócios"
+    region_hint: "Emirados Arabes Unidos"
+    query: "UAE Dubai infrastructure investment business"
+    timespan: "7d"
+    max_records: 40
+
+  - id: gdelt_africa_energy
+    type: gdelt
+    enabled: true
+    name: "GDELT — África Energia"
+    region_hint: "África"
+    query: "Africa energy infrastructure investment development"
+    timespan: "7d"
+    max_records: 40
+
+  # ── The Guardian (chave gratuita) ────────────────────────────────────
+  - id: guardian_business
+    type: guardian
+    enabled: true
+    name: "The Guardian — Business"
+    region_hint: "Global"
+    section: "business"
+    page_size: 30
+
+  - id: guardian_environment
+    type: guardian
+    enabled: true
+    name: "The Guardian — Environment"
+    region_hint: "Global"
+    section: "environment"
+    page_size: 20
+
+  - id: guardian_africa
+    type: guardian
+    enabled: true
+    name: "The Guardian — Africa"
+    region_hint: "África"
+    query: "Africa infrastructure investment"
+    page_size: 20
+
+  # ── Hacker News (sem API key) ────────────────────────────────────────
+  - id: hackernews_tech
+    type: hackernews
+    enabled: true
+    name: "Hacker News — Tech Trends"
+    region_hint: "Global"
+    tags: "story"
+    hits_per_page: 30
+    min_points: 100
+
+  - id: hackernews_ai
+    type: hackernews
+    enabled: true
+    name: "Hacker News — AI"
+    region_hint: "Global"
+    query: "artificial intelligence machine learning"
+    tags: "story"
+    hits_per_page: 20
+    min_points: 50
+
+  # ── Reddit (sem API key) ─────────────────────────────────────────────
+  - id: reddit_worldnews
+    type: reddit
+    enabled: true
+    name: "Reddit — World News"
+    region_hint: "Global"
+    subreddits: ["worldnews"]
+    sort: "hot"
+    limit: 25
+
+  - id: reddit_economics
+    type: reddit
+    enabled: true
+    name: "Reddit — Economics"
+    region_hint: "Global"
+    subreddits: ["economics", "investing"]
+    sort: "hot"
+    limit: 20
+
+  - id: reddit_africa
+    type: reddit
+    enabled: true
+    name: "Reddit — Africa"
+    region_hint: "África"
+    subreddits: ["africa", "Angola"]
+    sort: "new"
+    limit: 15
+
+  # ── NY Times (chave gratuita) ────────────────────────────────────────
+  - id: nytimes_business
+    type: nytimes
+    enabled: false     # Habilite após obter chave em developer.nytimes.com
+    name: "NY Times — Business"
+    region_hint: "Global"
+    query: "infrastructure investment emerging markets"
+    news_desk: "Business"
+    page: 0
+
+  # ── NewsAPI.org (chave gratuita) ─────────────────────────────────────
+  - id: newsapi_global
+    type: newsapi
+    enabled: false     # Habilite após obter chave em newsapi.org
+    name: "NewsAPI — Global Business"
+    region_hint: "Global"
+    query: "(Angola OR Portugal OR Brazil OR Dubai) AND (infrastructure OR investment OR procurement)"
+    language: "en"
+    page_size: 50
+
+  # ── RSS: Bancos de Desenvolvimento e Organizações Internacionais ─────
+  - id: worldbank_news
+    type: rss
+    enabled: true
+    name: "World Bank News"
+    region_hint: "Global"
+    url: "https://www.worldbank.org/en/news/all?format=rss"
+
+  - id: ifc_news
+    type: rss
+    enabled: true
+    name: "IFC News"
+    region_hint: "Global"
+    url: "https://www.ifc.org/en/news?format=rss"
+
+  - id: african_development_bank
+    type: rss
+    enabled: true
+    name: "African Development Bank"
+    region_hint: "Angola"
+    url: "https://www.afdb.org/en/news-and-events/press-releases/rss.xml"
+
+  - id: undp_news
+    type: rss
+    enabled: true
+    name: "UNDP News"
+    region_hint: "Global"
+    url: "https://www.undp.org/content/undp/en/home/news-centre/news.rss.xml"
+
+  - id: european_commission
+    type: rss
+    enabled: true
+    name: "European Commission"
+    region_hint: "Portugal"
+    url: "https://ec.europa.eu/commission/presscorner/api/rss"
+
+  # ── RSS: Imprensa económica/financeira ───────────────────────────────
+  - id: valor_economico
+    type: rss
+    enabled: true
+    name: "Valor Econômico"
+    region_hint: "Brasil"
+    url: "https://valor.globo.com/rss/"
+
+  - id: reuters_business
+    type: rss
+    enabled: true
+    name: "Reuters Business"
+    region_hint: "Global"
+    url: "https://feeds.reuters.com/reuters/businessNews"
+
+  - id: ft_world
+    type: rss
+    enabled: true
+    name: "Financial Times — World"
+    region_hint: "Global"
+    url: "https://www.ft.com/world?format=rss"
+
+  - id: khaleej_times_business
+    type: rss
+    enabled: true
+    name: "Khaleej Times — Business"
+    region_hint: "Emirados Arabes Unidos"
+    url: "https://www.khaleejtimes.com/feeds/business"
+
+  - id: the_national_uae
+    type: rss
+    enabled: true
+    name: "The National — UAE"
+    region_hint: "Emirados Arabes Unidos"
+    url: "https://www.thenationalnews.com/rss/business"
+
+  # ── RSS: Google News (dinâmico por query) ────────────────────────────
+  - id: gnews_angola
+    type: rss
+    enabled: true
+    name: "Google News — Angola"
+    region_hint: "Angola"
+    url: "https://news.google.com/rss/search?q=Angola+(investimento+OR+infraestrutura+OR+licitacao+OR+concessao+OR+saneamento)&hl=pt-PT&gl=AO&ceid=AO:pt-150"
+
+  - id: gnews_brasil_infra
+    type: rss
+    enabled: true
+    name: "Google News — Brasil Infraestrutura"
+    region_hint: "Brasil"
+    url: "https://news.google.com/rss/search?q=(Brasil+OR+Brazil)+(licitacao+OR+concessao+OR+PPP+OR+infraestrutura+OR+saneamento)&hl=pt-BR&gl=BR&ceid=BR:pt-419"
+
+  - id: gnews_portugal
+    type: rss
+    enabled: true
+    name: "Google News — Portugal"
+    region_hint: "Portugal"
+    url: "https://news.google.com/rss/search?q=Portugal+(concessao+OR+licitacao+OR+PPP+OR+investimento+OR+infraestrutura)&hl=pt-PT&gl=PT&ceid=PT:pt-150"
+
+  - id: gnews_uae_infra
+    type: rss
+    enabled: true
+    name: "Google News — UAE Infrastructure"
+    region_hint: "Emirados Arabes Unidos"
+    url: "https://news.google.com/rss/search?q=(Dubai+OR+UAE)+(infrastructure+OR+procurement+OR+investment+OR+facilities)&hl=en-US&gl=US&ceid=US:en"
+
+  - id: gnews_africa_energy
+    type: rss
+    enabled: true
+    name: "Google News — Africa Energy"
+    region_hint: "África"
+    url: "https://news.google.com/rss/search?q=Africa+(energy+OR+infrastructure+OR+investment+OR+renewable)&hl=en-US&gl=US&ceid=US:en"
+
+  # ── RSS: Fontes especializadas ───────────────────────────────────────
+  - id: infra_journal
+    type: rss
+    enabled: true
+    name: "Infrastructure Journal"
+    region_hint: "Global"
+    url: "https://www.ijglobal.com/rss/news"
+
+  - id: global_trade_review
+    type: rss
+    enabled: true
+    name: "Global Trade Review"
+    region_hint: "Global"
+    url: "https://www.gtreview.com/feed/"
+
+  - id: ppp_bulletin
+    type: rss
+    enabled: true
+    name: "PPP Bulletin"
+    region_hint: "Global"
+    url: "https://pppbulletin.org/feed/"
+
+  - id: angola_online
+    type: rss
+    enabled: true
+    name: "Angola Online — Economia"
+    region_hint: "Angola"
+    url: "https://angola-online.net/noticias/economia/rss.xml"
+
+  - id: jornal_de_angola
+    type: rss
+    enabled: true
+    name: "Jornal de Angola"
+    region_hint: "Angola"
+    url: "https://www.jornaldeangola.ao/ao/rss.xml"
+
+  - id: dinheiro_vivo
+    type: rss
+    enabled: true
+    name: "Dinheiro Vivo (PT)"
+    region_hint: "Portugal"
+    url: "https://www.dinheirovivo.pt/feed"
+
+  - id: publico_economia
+    type: rss
+    enabled: true
+    name: "Público — Economia"
+    region_hint: "Portugal"
+    url: "https://www.publico.pt/economia/rss"

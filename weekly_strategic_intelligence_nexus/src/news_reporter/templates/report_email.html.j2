@@ -1,0 +1,219 @@
+﻿<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>{{ title }}</title>
+  <style>
+    body { font-family: Segoe UI, Arial, sans-serif; color: {{ theme.text }}; line-height: 1.45; margin: 0; padding: 24px; background: {{ theme.body_bg }}; }
+    .container { max-width: 1150px; margin: 0 auto; background: {{ theme.container_bg }}; padding: 30px; border-radius: 14px; box-shadow: {{ theme.container_shadow }}; }
+    h1, h2, h3 { margin: 0 0 10px; }
+    h1 { font-size: 56px; line-height: 1.05; color: {{ theme.title }}; }
+    h2 { font-size: 42px; color: {{ theme.title }}; margin-top: 26px; }
+    h3 { font-size: 28px; color: {{ theme.title }}; margin-top: 22px; }
+    .subtitle { font-size: 24px; color: {{ theme.subtitle }}; margin-top: 10px; }
+    .hero-meta { margin-top: 24px; border: 1px solid {{ theme.card_border }}; border-radius: 10px; padding: 14px 18px; background: {{ theme.muted_bg }}; }
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .market-grid { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 12px; margin-bottom: 8px; }
+    .market-card { background: #08152f; border: 1px solid #1d2d52; border-radius: 8px; padding: 12px; color: #f8fafc; }
+    .market-name { font-size: 12px; letter-spacing: .8px; color: #8fb0e6; font-weight: 700; text-transform: uppercase; }
+    .market-value { font-size: 34px; font-weight: 800; line-height: 1.05; margin-top: 6px; }
+    .market-pct { font-size: 21px; font-weight: 700; float: right; margin-top: -24px; }
+    .market-pct.pos { color: #22c55e; }
+    .market-pct.neg { color: #f43f5e; }
+    .card { border: 1px solid {{ theme.card_border }}; border-radius: 12px; padding: 16px; background: {{ theme.card_bg }}; box-shadow: 0 8px 20px rgba(15,23,42,.16); }
+    .card.alert { border-top: 6px solid #d97706; }
+    .card.positive { border-top: 6px solid #16a34a; }
+    .card.warning { border-top: 6px solid #ca8a04; }
+    .card.info { border-top: 6px solid #0891b2; }
+    .kpi { font-size: 48px; font-weight: 700; color: {{ theme.title }}; }
+    .macro-wrap { display: grid; grid-template-columns: 1.2fr .9fr; gap: 16px; }
+    .micro { font-size: 14px; color: {{ theme.subtitle }}; }
+    .highlight { background: {{ theme.muted_bg }}; border-left: 4px solid {{ theme.accent }}; padding: 10px 12px; border-radius: 8px; margin-top: 10px; }
+    .region-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .table th, .table td { border: 1px solid {{ theme.card_border }}; padding: 12px; vertical-align: top; }
+    .table th { background: {{ theme.table_head }}; text-align: left; }
+    .connector { border: 1px solid {{ theme.card_border }}; border-radius: 12px; padding: 16px; background: {{ theme.muted_bg }}; }
+    .connector-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 12px; }
+    .node { border: 2px solid {{ theme.node_border }}; border-radius: 999px; padding: 18px; text-align: center; background: {{ theme.card_bg }}; font-weight: 600; color: {{ theme.node_text }}; }
+    .node.center { border-color: {{ theme.accent }}; color: {{ theme.accent }}; }
+    .news-card { border: 1px solid {{ theme.card_border }}; border-radius: 12px; padding: 14px; margin-bottom: 14px; background: {{ theme.card_bg }}; }
+    .news-img { width: 100%; max-width: 650px; border-radius: 8px; border: 1px solid {{ theme.card_border }}; margin: 10px 0; }
+    .news-grid-cards { display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-top: 10px; }
+    .news-v2 { border: 1px solid {{ theme.card_border }}; border-radius: 22px; overflow: hidden; background: {{ theme.card_bg }}; box-shadow: 0 10px 24px rgba(15,23,42,.08); display:flex; flex-direction:column; min-height: 520px; }
+    .news-v2-media-wrap { position:relative; height: 190px; overflow:hidden; background: {{ theme.muted_bg }}; }
+    .news-v2-media { width:100%; height:100%; object-fit:cover; display:block; }
+    .news-v2-badge { position:absolute; top:10px; left:10px; background: rgba(255,255,255,.92); color:#0f172a; border-radius:999px; padding:4px 10px; font-size:10px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; }
+    .news-v2-score { position:absolute; right:10px; bottom:10px; background:#4f46e5; color:#fff; border-radius:999px; padding:5px 10px; font-size:11px; font-weight:800; }
+    .news-v2-body { padding: 14px 16px 16px 16px; display:flex; flex-direction:column; gap:8px; flex:1; }
+    .news-v2-tags { display:flex; gap:8px; flex-wrap:wrap; }
+    .news-v2-tag { background:#eef2ff; color:#4338ca; border-radius:999px; padding:3px 8px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.2px; }
+    .news-v2-meta { font-size:12px; color:{{ theme.subtitle }}; }
+    .news-v2-title { font-size:18px; line-height:1.24; color:{{ theme.title }}; margin:0; word-break:break-word; overflow-wrap:anywhere; }
+    .news-v2-summary { color:{{ theme.subtitle }}; font-size:14px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:5; -webkit-box-orient:vertical; overflow:hidden; min-height:95px; }
+    .news-v2-actions { margin-top:auto; display:flex; gap:8px; align-items:center; }
+    .news-v2-btn { display:inline-flex; justify-content:center; align-items:center; flex:1; text-align:center; text-decoration:none; background:#f1f5f9; color:#0f172a; border-radius:12px; padding:10px 12px; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.35px; border:1px solid {{ theme.card_border }}; }
+    .news-v2-btn:hover { filter:brightness(.98); }
+    .small { color: {{ theme.subtitle }}; font-size: 13px; }
+    .url-link { display: inline-block; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
+    .back-top { margin-top: 10px; text-align: right; }
+    .back-top a { color: {{ theme.accent }}; text-decoration: none; font-size: 12px; font-weight: 600; }
+    .back-top a:hover { text-decoration: underline; }
+
+    body.theme-dark_exec { background: radial-gradient(circle at top left, #1d2a44 0%, #0b1220 50%, #070c17 100%); }
+    body.theme-dark_exec .container { border: 1px solid #263751; }
+    body.theme-dark_exec .hero-meta { border-left: 5px solid #38bdf8; }
+    body.theme-dark_exec h1 { letter-spacing: .6px; text-transform: uppercase; }
+    body.theme-boardroom_print { background: repeating-linear-gradient(-45deg, #f7f7f6, #f7f7f6 8px, #f4f4f3 8px, #f4f4f3 16px); }
+    body.theme-boardroom_print .container { border: 1px solid #d4d4d8; }
+    body.theme-boardroom_print h1 { font-size: 52px; }
+    @media (max-width: 1024px) { .market-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 640px) { .market-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body id="top" class="theme-{{ theme.name }}">
+  <div class="container">
+    <div class="small">Centro de Comando Estratégico | Inteligência de Mercado | Tema aplicado: <strong>{{ theme.label }}</strong> ({{ theme.name }})</div>
+    <h1>{{ title }}</h1>
+    <div class="subtitle">Síntese Executiva Global e Regional</div>
+    <div class="hero-meta">
+      <div><strong>Período de Análise:</strong> {{ strategic.period_start }} a {{ strategic.period_end }}</div>
+      <div><strong>Regiões Focais:</strong> {{ strategic.focus_regions | join(', ') }}</div>
+      <div><strong>Volume Analisado:</strong> &lt; 50 fatos críticos curados (atual: {{ strategic.volume }})</div>
+      <div style="margin-top:8px;"><strong>Parâmetros da execução:</strong>
+        max_news={{ run_params.max_news if run_params.max_news is defined else 'N/D' }};
+        theme={{ run_params.theme if run_params.theme is defined else 'N/D' }};
+        keywords={{ run_params.priority_keywords | join(', ') if run_params.priority_keywords is defined else 'N/D' }}
+      </div>
+    </div>
+    {% if market_snapshot %}
+    <div class="market-grid">
+      {% for m in market_snapshot %}
+      <div class="market-card">
+        <div class="market-name">{{ m.name }}</div>
+        <div class="market-value">{{ m.prefix }} {{ m.value }}</div>
+        <div class="market-pct {{ 'pos' if m.positive else 'neg' }}">{{ m.pct }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <h2>Resumo da Semana: Sinais e Métricas Críticas</h2>
+    <div class="card" style="margin-bottom: 14px;">
+      <div><strong>Resumo Executivo:</strong> {{ synthesis.executive_summary }}</div>
+      <div style="margin-top:8px;"><strong>Destaques por Região:</strong> {{ synthesis.regional_highlights | join(' | ') }}</div>
+    </div>
+    <div class="grid-4">
+      {% for c in strategic.signal_cards %}
+      <div class="card {{ c.color }}">
+        <div class="small">{{ c.label }}</div>
+        <h3>{{ c.title }}</h3>
+        <div class="kpi">{{ c.metric }}</div>
+        <div>{{ c.desc }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <h2>O Choque Macroeconômico: Efeito Cascata</h2>
+    <div class="macro-wrap">
+      <div class="card">
+        <h3>{{ strategic.macro.title }}</h3>
+        <div>{{ strategic.macro.left }}</div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:12px;">
+          <h3>Retração de Capital e Projetos</h3>
+          <div>{{ strategic.macro.right_top }}</div>
+        </div>
+        <div class="card">
+          <h3>Respostas Mitigatórias do Mercado</h3>
+          <div>{{ strategic.macro.right_bottom }}</div>
+        </div>
+      </div>
+    </div>
+
+    <h2>Movimentações Regionais</h2>
+    {% for region, region_items in strategic.regional_briefs.items() %}
+      <h3>{{ region }}</h3>
+      <div class="region-grid">
+        {% if region_items %}
+          {% for n in region_items %}
+          <div class="card">
+            <h3>{{ n.translated_title_pt }}</h3>
+            <div class="small">Score {{ n.score }} | {{ n.published_at.strftime('%d/%m/%Y %H:%M') if n.published_at else 'N/D' }}</div>
+            <div>{{ n.executive_summary_pt }}</div>
+            <div class="highlight"><strong>Insight:</strong> {{ n.opportunity_why }}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="card">Sem fatos críticos suficientes para este recorte semanal.</div>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    <h2>Matriz Comparativa: Inteligência de Oportunidades</h2>
+    <table class="table">
+      <thead>
+        <tr><th>Região</th><th>Vetor de Oportunidade</th><th>Risco / Barreira</th></tr>
+      </thead>
+      <tbody>
+        {% for row in strategic.comparative_rows %}
+          <tr>
+            <td><strong>{{ row.region }}</strong></td>
+            <td>{{ row.vector }}</td>
+            <td>{{ row.risk }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h2>O Eixo Conector</h2>
+    <div class="connector">
+      <div class="connector-row">
+        <div class="node">{{ strategic.connector.left }}</div>
+        <div class="node">{{ strategic.connector.right }}</div>
+        <div class="node">{{ strategic.connector.bottom }}</div>
+      </div>
+      <div class="connector-row">
+        <div></div>
+        <div class="node center">{{ strategic.connector.center }}</div>
+        <div></div>
+      </div>
+    </div>
+
+    <h2>Notícias Curadas</h2>
+    <div class="news-grid-cards">
+    {% for n in items %}
+      <article class="news-v2" id="{{ n.anchor_id }}">
+        <div class="news-v2-media-wrap">
+          <img class="news-v2-media" src="{{ n.display_image_url }}" alt="Imagem relativa à notícia" />
+          <div class="news-v2-badge">Conteúdo {{ (n.normalized_language or 'N/D') | upper }}</div>
+          <div class="news-v2-score">Score {{ n.score }}</div>
+        </div>
+        <div class="news-v2-body">
+          <div class="news-v2-tags">
+            <span class="news-v2-tag">{{ (n.themes[0] if n.themes else 'Geral') | upper }}</span>
+            <span class="news-v2-tag">{{ n.region }}</span>
+          </div>
+          <div class="news-v2-meta">🕒 {{ n.published_at.strftime('%d/%m/%Y, %H:%M:%S') if n.published_at else 'N/D' }}</div>
+          <h3 class="news-v2-title">{{ n.translated_title_pt }}</h3>
+          <div class="news-v2-summary">{{ n.executive_summary_pt }}</div>
+          <div class="news-v2-actions">
+            <a class="news-v2-btn" href="{{ n.url }}" target="_blank" rel="noopener noreferrer">Abrir Análise Técnica</a>
+          </div>
+        </div>
+      </article>
+    {% endfor %}
+    </div>
+
+    <h2>Metodologia e Conclusão do Artefato</h2>
+    <div class="card">
+      <div><strong>Período Processado:</strong> {{ strategic.period_start }} a {{ strategic.period_end }}</div>
+      <div><strong>Restrição de Ruído:</strong> Relatório destilado para os eventos de maior impacto estratégico.</div>
+      <div><strong>Fontes Integradas:</strong> {{ strategic.sources | join(', ') }}</div>
+      <div><strong>Compromisso de Inteligência:</strong> Atualização semanal com foco em concisão executiva e tomada de decisão.</div>
+      <div class="small" style="margin-top:10px;"><strong>[ Relatório Encerrado. Preparado para Leitura Executiva. ]</strong></div>
+    </div>
+  </div>
+</body>
+</html>
