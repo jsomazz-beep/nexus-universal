@@ -1082,7 +1082,7 @@ def make_handler(state: AppState):
     return Handler
 
 
-def start_server(port: int = 8787, open_browser: bool = True) -> None:
+def start_server(host: str = "127.0.0.1", port: int = 8787, open_browser: bool = True) -> None:
     ensure_bootstrap_files()
     cfg = load_config(DEFAULT_CONFIG)
     monitoring = cfg.monitoring
@@ -1142,8 +1142,10 @@ def start_server(port: int = 8787, open_browser: bool = True) -> None:
     if reports:
         state.selected_report_name = reports[0].name
 
-    server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(state))
-    url = f"http://127.0.0.1:{port}"
+    bind_host = (host or "127.0.0.1").strip()
+    server = ThreadingHTTPServer((bind_host, port), make_handler(state))
+    display_host = "127.0.0.1" if bind_host == "0.0.0.0" else bind_host
+    url = f"http://{display_host}:{port}"
     print(f"WebApp embarcado em execucao: {url}")
     if open_browser:
         webbrowser.open(url, new=2)
