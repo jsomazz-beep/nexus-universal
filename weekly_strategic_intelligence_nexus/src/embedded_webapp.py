@@ -4,6 +4,7 @@ import copy
 import hashlib
 import html
 import json
+import logging
 import os
 import re
 import sys
@@ -15,6 +16,8 @@ from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, quote_plus, unquote_plus, urlparse
+
+import requests
 
 SRC_DIR = Path(__file__).resolve().parent
 if str(SRC_DIR) not in sys.path:
@@ -31,6 +34,7 @@ BUNDLE_ROOT = Path(os.getenv("NEWS_BUNDLE_ROOT", "")).expanduser() if os.getenv(
 DEFAULT_CONFIG = PROJECT_ROOT / "config" / "config.yaml"
 DEFAULT_ENV = PROJECT_ROOT / ".env"
 THEMES = ["light", "dark_exec", "boardroom_print"]
+logger = logging.getLogger(__name__)
 EXTRA_SOURCE_CATALOG = [
     {
         "id": "google_news_global_it",
@@ -389,6 +393,104 @@ def save_profiles(path: Path, profiles: dict[str, dict], default_profile_name: s
         "profiles": profiles,
     }
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _supabase_profiles_config() -> dict[str, str] | None:
+    supabase_url = (os.getenv("SUPABASE_URL") or "").strip().rstrip("/")
+    service_key = (os.getenv("SUPABASE_SERVICE_ROLE_KEY") or "").strip()
+    if not supabase_url or not service_key:
+        return None
+    return {
+        "url": supabase_url,
+        "key": service_key,
+        "table": (os.getenv("SUPABASE_PROFILES_TABLE") or "profile_sets").strip(),
+        "set_id": (os.getenv("SUPABASE_PROFILE_SET_ID") or "default").strip(),
+    }
+
+
+def _supabase_load_profiles() -> tuple[dict[str, dict], str | None] | None:
+    cfg = _supabase_profiles_config()
+    if not cfg:
+        return None
+
+    endpoint = f"{cfg['url']}/rest/v1/{cfg['table']}"
+    headers = {
+        "apikey": cfg["key"],
+        "Authorization": f"Bearer {cfg['key']}",
+        "Accept": "application/json",
+    }
+    params = {
+        "id": f"eq.{cfg['set_id']}",
+        "select": "payload",
+        "limit": "1",
+    }
+    try:
+        resp = requests.get(endpoint, headers=headers, params=params, timeout=12)
+        resp.raise_for_status()
+        rows = resp.json()
+        if not isinstance(rows, list) or not rows:
+            return {}, None
+        payload = rows[0].get("payload", {})
+        if not isinstance(payload, dict):
+            return {}, None
+        profiles_raw = payload.get("profiles", {})
+        meta = payload.get("_meta", {})
+        out: dict[str, dict] = {}
+        for name, item in profiles_raw.items():
+            if isinstance(name, str) and isinstance(item, dict):
+                out[name] = item
+        default_profile_name = None
+        if isinstance(meta, dict):
+            candidate = meta.get("default_profile")
+            if isinstance(candidate, str) and candidate.strip() and candidate in out:
+                default_profile_name = candidate.strip()
+        return out, default_profile_name
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Falha ao ler perfis do Supabase, usando fallback local: %s", exc)
+        return None
+
+
+def _supabase_save_profiles(profiles: dict[str, dict], default_profile_name: str | None) -> bool:
+    cfg = _supabase_profiles_config()
+    if not cfg:
+        return False
+
+    endpoint = f"{cfg['url']}/rest/v1/{cfg['table']}"
+    headers = {
+        "apikey": cfg["key"],
+        "Authorization": f"Bearer {cfg['key']}",
+        "Content-Type": "application/json",
+        "Prefer": "resolution=merge-duplicates",
+    }
+    body = [
+        {
+            "id": cfg["set_id"],
+            "payload": {
+                "_meta": {"default_profile": default_profile_name or ""},
+                "profiles": profiles,
+            },
+        }
+    ]
+    try:
+        resp = requests.post(endpoint, headers=headers, data=json.dumps(body), timeout=12)
+        resp.raise_for_status()
+        return True
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Falha ao salvar perfis no Supabase, mantendo local: %s", exc)
+        return False
+
+
+def load_profiles_storage(path: Path) -> tuple[dict[str, dict], str | None]:
+    remote = _supabase_load_profiles()
+    if remote is not None:
+        return remote
+    return load_profiles(path)
+
+
+def save_profiles_storage(path: Path, profiles: dict[str, dict], default_profile_name: str | None) -> None:
+    if _supabase_save_profiles(profiles, default_profile_name):
+        return
+    save_profiles(path, profiles, default_profile_name)
 
 
 def list_reports(output_dir: Path) -> list[Path]:
@@ -984,7 +1086,7 @@ def make_handler(state: AppState):
                         state.default_profile_name = None
                     if state.selected_profile == to_delete:
                         state.selected_profile = None
-                    save_profiles(state.profiles_file, state.profiles, state.default_profile_name)
+                    save_profiles_storage(state.profiles_file, state.profiles, state.default_profile_name)
                 self.send_response(303)
                 self.send_header("Location", "/")
                 self.end_headers()
@@ -997,7 +1099,7 @@ def make_handler(state: AppState):
                     payload = copy.deepcopy(state.profiles[source_name])
                     state.profiles[target_name] = payload
                     state.selected_profile = target_name
-                    save_profiles(state.profiles_file, state.profiles, state.default_profile_name)
+                    save_profiles_storage(state.profiles_file, state.profiles, state.default_profile_name)
                 self.send_response(303)
                 self.send_header("Location", "/")
                 self.end_headers()
@@ -1023,7 +1125,7 @@ def make_handler(state: AppState):
                     state.selected_profile = profile_name
                     if make_default:
                         state.default_profile_name = profile_name
-                    save_profiles(state.profiles_file, state.profiles, state.default_profile_name)
+                    save_profiles_storage(state.profiles_file, state.profiles, state.default_profile_name)
                 self.send_response(303)
                 self.send_header("Location", "/")
                 self.end_headers()
@@ -1112,7 +1214,7 @@ def start_server(host: str = "127.0.0.1", port: int = 8787, open_browser: bool =
     default_max_news = int(project.get("max_news", 50))
     default_time_window_days = int(filters_cfg.get("time_window_days", 7))
     profiles_file = PROJECT_ROOT / "data" / "search_profiles.json"
-    profiles, default_profile_name = load_profiles(profiles_file)
+    profiles, default_profile_name = load_profiles_storage(profiles_file)
 
     state = AppState(
         config_path=DEFAULT_CONFIG,

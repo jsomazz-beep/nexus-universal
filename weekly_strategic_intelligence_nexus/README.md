@@ -72,3 +72,9 @@ Gera:
 - `src/news_reporter/`: núcleo funcional em paridade
 - `render.yaml`: blueprint de deploy cloud
 - `Dockerfile`: container para execução em nuvem
+
+## Perfis em Supabase (opcional, recomendado na nuvem)
+
+1. No Supabase SQL Editor, execute: docs/supabase_profiles_setup.sql`n2. Configure no serviço (Render env vars):
+   - SUPABASE_URL`n   - SUPABASE_SERVICE_ROLE_KEY`n   - opcional: SUPABASE_PROFILES_TABLE=profile_sets`n   - opcional: SUPABASE_PROFILE_SET_ID=default`n3. Sem essas variáveis, o app continua salvando local em data/search_profiles.json.
+
