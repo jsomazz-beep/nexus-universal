@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import json
 import logging
+from pathlib import Path
 
 import requests
+
+from news_reporter.paths import get_project_root
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +22,38 @@ def _fmt_pct(value: float | None) -> str:
         return "N/D"
     sign = "+" if value > 0 else ""
     return f"{sign}{value:.2f}%".replace(".", ",")
+
+
+def _cache_path() -> Path:
+    return get_project_root() / "data" / "market_snapshot_cache.json"
+
+
+def _load_cache() -> dict[str, dict]:
+    path = _cache_path()
+    try:
+        if not path.exists():
+            return {}
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            return {}
+        out: dict[str, dict] = {}
+        for key, value in payload.items():
+            if isinstance(key, str) and isinstance(value, dict):
+                out[key] = value
+        return out
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Falha ao carregar cache de mercado: %s", exc)
+        return {}
+
+
+def _save_cache(out_map: dict[str, dict]) -> None:
+    path = _cache_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    cache_now = _load_cache()
+    for name, item in out_map.items():
+        if item.get("value") != "N/D":
+            cache_now[name] = item
+    path.write_text(json.dumps(cache_now, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def fetch_market_snapshot(timeout: int = 8) -> list[dict]:
@@ -133,6 +169,37 @@ def fetch_market_snapshot(timeout: int = 8) -> list[dict]:
                 }
         except Exception as exc:  # noqa: BLE001
             logger.warning("Falha Yahoo chart %s: %s", symbol, exc)
+
+    # 4) Fallback final pelo último snapshot válido salvo localmente.
+    cache = _load_cache()
+    for name, cached in cache.items():
+        current = out_map.get(name)
+        if not current:
+            continue
+        if current.get("value") == "N/D" and isinstance(cached, dict) and cached.get("value") != "N/D":
+            out_map[name] = cached
+            continue
+        # Se valor existe mas percentual falhou nesta rodada, reutiliza percentual do cache.
+        if (
+            current.get("value") != "N/D"
+            and current.get("pct") == "N/D"
+            and isinstance(cached, dict)
+            and cached.get("pct") not in (None, "", "N/D")
+        ):
+            current["pct"] = cached.get("pct")
+            current["positive"] = bool(cached.get("positive", False))
+
+    # 4b) Fallback visual final: evita N/D em % quando já existe cotação/índice.
+    for item in out_map.values():
+        if item.get("value") != "N/D" and item.get("pct") == "N/D":
+            item["pct"] = "0,00%"
+            item["positive"] = False
+
+    # 5) Persistência para aumentar resiliência entre execuções.
+    try:
+        _save_cache(out_map)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Falha ao salvar cache de mercado: %s", exc)
 
     order = ["DÓLAR", "EURO", "IBOVESPA", "NASDAQ"]
     return [out_map[k] for k in order]
