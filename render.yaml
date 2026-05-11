@@ -5,7 +5,7 @@ services:
     plan: free
     autoDeploy: true
     rootDir: weekly_strategic_intelligence_nexus
-    dockerfilePath: weekly_strategic_intelligence_nexus/Dockerfile
+    dockerfilePath: Dockerfile
     healthCheckPath: /
     envVars:
       - key: NEWS_OPEN_BROWSER
