@@ -139,6 +139,39 @@ def fetch_market_snapshot(timeout: int = 8) -> list[dict]:
     except Exception as exc:  # noqa: BLE001
         logger.warning("Falha AwesomeAPI FX: %s", exc)
 
+    # 2b) Fallback global para FX (sem chave) via Frankfurter.
+    # Retorna cotação (sem variação intraday), então % pode cair para cache/0,00%.
+    try:
+        if out_map["DÓLAR"]["value"] == "N/D":
+            usd_resp = session.get("https://api.frankfurter.dev/v1/latest?base=USD&symbols=BRL", timeout=timeout)
+            usd_resp.raise_for_status()
+            usd_data = usd_resp.json()
+            usd_brl = (usd_data.get("rates", {}) or {}).get("BRL")
+            if usd_brl is not None:
+                out_map["DÓLAR"] = {
+                    "name": "DÓLAR",
+                    "prefix": "R$",
+                    "value": _fmt_number(float(usd_brl), 2),
+                    "pct": "N/D",
+                    "positive": False,
+                }
+
+        if out_map["EURO"]["value"] == "N/D":
+            eur_resp = session.get("https://api.frankfurter.dev/v1/latest?base=EUR&symbols=BRL", timeout=timeout)
+            eur_resp.raise_for_status()
+            eur_data = eur_resp.json()
+            eur_brl = (eur_data.get("rates", {}) or {}).get("BRL")
+            if eur_brl is not None:
+                out_map["EURO"] = {
+                    "name": "EURO",
+                    "prefix": "R$",
+                    "value": _fmt_number(float(eur_brl), 2),
+                    "pct": "N/D",
+                    "positive": False,
+                }
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Falha Frankfurter FX: %s", exc)
+
     # 3) Fallback por ativo no endpoint chart do Yahoo (índices)
     index_symbols = {
         "^BVSP": ("IBOVESPA", ""),

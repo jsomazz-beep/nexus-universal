@@ -481,10 +481,21 @@ def _supabase_save_profiles(profiles: dict[str, dict], default_profile_name: str
 
 
 def load_profiles_storage(path: Path) -> tuple[dict[str, dict], str | None]:
+    local_profiles, local_default = load_profiles(path)
     remote = _supabase_load_profiles()
-    if remote is not None:
-        return remote
-    return load_profiles(path)
+
+    # Supabase indisponível/erro: usa local.
+    if remote is None:
+        return local_profiles, local_default
+
+    remote_profiles, remote_default = remote
+
+    # Supabase vazio mas local já tem dados: prioriza local e tenta sincronizar.
+    if not remote_profiles and local_profiles:
+        _supabase_save_profiles(local_profiles, local_default)
+        return local_profiles, local_default
+
+    return remote_profiles, remote_default
 
 
 def save_profiles_storage(path: Path, profiles: dict[str, dict], default_profile_name: str | None) -> None:
