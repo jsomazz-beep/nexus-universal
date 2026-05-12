@@ -24,6 +24,19 @@ def _fmt_pct(value: float | None) -> str:
     return f"{sign}{value:.2f}%".replace(".", ",")
 
 
+def _parse_fmt_number(value: str | None) -> float | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text or text == "N/D":
+        return None
+    text = text.replace(".", "").replace(",", ".")
+    try:
+        return float(text)
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def _cache_path() -> Path:
     return get_project_root() / "data" / "market_snapshot_cache.json"
 
@@ -221,6 +234,15 @@ def fetch_market_snapshot(timeout: int = 8) -> list[dict]:
         ):
             current["pct"] = cached.get("pct")
             current["positive"] = bool(cached.get("positive", False))
+
+        # Se ainda sem percentual, tenta calcular pelo delta vs último valor em cache.
+        if current.get("value") != "N/D" and current.get("pct") == "N/D" and isinstance(cached, dict):
+            now_v = _parse_fmt_number(current.get("value"))
+            old_v = _parse_fmt_number(cached.get("value"))
+            if now_v is not None and old_v not in (None, 0):
+                pct = ((now_v - old_v) / old_v) * 100.0
+                current["pct"] = _fmt_pct(pct)
+                current["positive"] = bool(pct > 0)
 
     # 4b) Fallback visual final: evita N/D em % quando já existe cotação/índice.
     for item in out_map.values():
