@@ -16,6 +16,7 @@ from news_reporter.paths import get_project_root
 from news_reporter.persistence import append_execution_history
 from news_reporter.report import ReportComposer
 from news_reporter.scoring import Scorer
+from news_reporter.supabase_reports import save_report_snapshot
 from news_reporter.summarizer import Summarizer
 from news_reporter.template_paths import resolve_templates_dir
 
@@ -79,6 +80,14 @@ class WeeklyReporterPipeline:
             },
             market_snapshot=fetch_market_snapshot(timeout=int(self.runtime.get("per_source_timeout_seconds", 8))),
         )
+        try:
+            save_report_snapshot(
+                Path(report_path_html).name,
+                report_html,
+                max_keep=int(self.runtime.get("report_history_keep", 1000)),
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Falha ao persistir relatório remoto: %s", exc)
 
         finished = datetime.now(timezone.utc)
         result = ExecutionResult(

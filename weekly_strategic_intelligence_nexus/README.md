@@ -78,3 +78,9 @@ Gera:
 1. No Supabase SQL Editor, execute: docs/supabase_profiles_setup.sql`n2. Configure no serviço (Render env vars):
    - SUPABASE_URL`n   - SUPABASE_SERVICE_ROLE_KEY`n   - opcional: SUPABASE_PROFILES_TABLE=profile_sets`n   - opcional: SUPABASE_PROFILE_SET_ID=default`n3. Sem essas variáveis, o app continua salvando local em data/search_profiles.json.
 
+
+## Relatórios persistentes no Supabase (recomendado em nuvem)
+
+1. No Supabase SQL Editor, execute: docs/supabase_reports_setup.sql`n2. Garanta as env vars no Render:
+   - SUPABASE_URL`n   - SUPABASE_SERVICE_ROLE_KEY`n   - opcional: SUPABASE_REPORTS_TABLE=intelligence_reports`n3. O app salva cada relatório no Supabase e reidrata os últimos no boot (evita sumir após restart).
+

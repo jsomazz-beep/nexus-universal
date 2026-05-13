@@ -28,6 +28,7 @@ from news_reporter.logging_config import setup_logging
 from news_reporter.paths import get_project_root
 from nexus_like.pipeline import NexusCompatiblePipeline
 from news_reporter.runtime import load_env_file
+from news_reporter.supabase_reports import hydrate_local_reports
 
 PROJECT_ROOT = get_project_root()
 BUNDLE_ROOT = Path(os.getenv("NEWS_BUNDLE_ROOT", "")).expanduser() if os.getenv("NEWS_BUNDLE_ROOT") else None
@@ -1257,6 +1258,9 @@ def start_server(host: str = "127.0.0.1", port: int = 8787, open_browser: bool =
     )
     if state.default_profile_name and state.default_profile_name in state.profiles:
         state.selected_profile = state.default_profile_name
+
+    # Em nuvem sem disco persistente, reidrata os últimos relatórios salvos no Supabase.
+    hydrate_local_reports(state.output_dir, max_fetch=25)
 
     reports = list_reports(state.output_dir)
     if reports:
