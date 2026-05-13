@@ -17,9 +17,6 @@
     .market-card { background: #08152f; border: 1px solid #1d2d52; border-radius: 8px; padding: 12px; color: #f8fafc; }
     .market-name { font-size: 12px; letter-spacing: .8px; color: #8fb0e6; font-weight: 700; text-transform: uppercase; }
     .market-value { font-size: 34px; font-weight: 800; line-height: 1.05; margin-top: 6px; }
-    .market-pct { font-size: 21px; font-weight: 700; float: right; margin-top: -24px; }
-    .market-pct.pos { color: #22c55e; }
-    .market-pct.neg { color: #f43f5e; }
     .card { border: 1px solid {{ theme.card_border }}; border-radius: 12px; padding: 16px; background: {{ theme.card_bg }}; box-shadow: 0 8px 20px rgba(15,23,42,.16); }
     .card.alert { border-top: 6px solid #d97706; }
     .card.positive { border-top: 6px solid #16a34a; }
@@ -92,7 +89,6 @@
       <div class="market-card">
         <div class="market-name">{{ m.name }}</div>
         <div class="market-value">{{ m.prefix }} {{ m.value }}</div>
-        <div class="market-pct {{ 'pos' if m.positive else 'neg' }}">{{ m.pct }}</div>
       </div>
       {% endfor %}
     </div>

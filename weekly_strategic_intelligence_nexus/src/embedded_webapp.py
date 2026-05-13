@@ -408,17 +408,29 @@ def _supabase_profiles_config() -> dict[str, str] | None:
     }
 
 
+def _supabase_headers(key: str, *, json_content: bool = False, upsert: bool = False) -> dict[str, str]:
+    headers = {
+        "apikey": key,
+        "Accept": "application/json",
+    }
+    # Chaves novas sb_secret/sb_publishable não devem ir como Bearer token.
+    # Chaves legadas JWT podem continuar com Authorization.
+    if not key.startswith("sb_"):
+        headers["Authorization"] = f"Bearer {key}"
+    if json_content:
+        headers["Content-Type"] = "application/json"
+    if upsert:
+        headers["Prefer"] = "resolution=merge-duplicates"
+    return headers
+
+
 def _supabase_load_profiles() -> tuple[dict[str, dict], str | None] | None:
     cfg = _supabase_profiles_config()
     if not cfg:
         return None
 
     endpoint = f"{cfg['url']}/rest/v1/{cfg['table']}"
-    headers = {
-        "apikey": cfg["key"],
-        "Authorization": f"Bearer {cfg['key']}",
-        "Accept": "application/json",
-    }
+    headers = _supabase_headers(cfg["key"])
     params = {
         "id": f"eq.{cfg['set_id']}",
         "select": "payload",
@@ -456,12 +468,7 @@ def _supabase_save_profiles(profiles: dict[str, dict], default_profile_name: str
         return False
 
     endpoint = f"{cfg['url']}/rest/v1/{cfg['table']}"
-    headers = {
-        "apikey": cfg["key"],
-        "Authorization": f"Bearer {cfg['key']}",
-        "Content-Type": "application/json",
-        "Prefer": "resolution=merge-duplicates",
-    }
+    headers = _supabase_headers(cfg["key"], json_content=True, upsert=True)
     body = [
         {
             "id": cfg["set_id"],
