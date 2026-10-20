@@ -35,7 +35,7 @@ class RSSCollector(Collector):
             items.append(
                 NewsItem(
                     source_id=self.source_config.get("id", "rss"),
-                    source_name=source_name,
+                    source_name=(entry.get('source') or {}).get('title') or source_name,
                     title=(entry.get("title") or "").strip(),
                     subtitle=None,
                     url=entry.get("link", "").strip(),
@@ -49,6 +49,7 @@ class RSSCollector(Collector):
                     metadata={
                         "region_hint": self.source_config.get("region_hint", ""),
                         "source_type": "rss",
+                        "feed_name": source_name,
                         "published_raw": published_raw,
                     },
                 )

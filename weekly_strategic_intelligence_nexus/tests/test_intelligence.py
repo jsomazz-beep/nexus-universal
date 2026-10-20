@@ -190,7 +190,7 @@ class IntelligenceTests(unittest.TestCase):
                 thread.start()
                 try:
                     with urlopen(f'http://127.0.0.1:{server.server_port}/', timeout=5) as response:
-                        self.assertEqual(response.headers.get('X-Nexus-Analysis-Version'), 'rules-v1')
+                        self.assertEqual(response.headers.get('X-Nexus-Analysis-Version'), 'rules-v2')
                         self.assertEqual(response.read(), b'<html>ok</html>')
                 finally:
                     server.shutdown()
@@ -209,7 +209,7 @@ class IntelligenceTests(unittest.TestCase):
                          'O município abriu licitação de manutenção predial no Brasil.')]
             progress = []
             with patch.object(WeeklyReporterPipeline, '_collect_all', return_value=(news, [])), \
-                 patch('news_reporter.summarizer.GoogleTranslator', None), \
+                 patch('news_reporter.summarizer.ReportTranslator'), \
                  patch('news_reporter.pipeline.save_report_snapshot') as save, \
                  patch('news_reporter.pipeline.fetch_market_snapshot', return_value=[]):
                 result = NexusCompatiblePipeline(cfg, {}, lambda message, percent: progress.append(percent)).run()

@@ -46,6 +46,8 @@ class NewsItem:
     translated_title_pt: str = ""
     short_summary_pt: str = ""
     executive_summary_pt: str = ""
+    translated_content_pt: str = ""
+    translation_status: str = "not_requested"
 
     secondary_links: list[SourceSecondaryLink] = field(default_factory=list)
 

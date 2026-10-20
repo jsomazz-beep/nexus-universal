@@ -12,9 +12,10 @@ from collections import Counter
 from urllib.parse import urlsplit, urlunsplit
 
 from news_reporter.models import NewsItem
+from news_reporter.context_rules import context_for, quantities_from_text
 
-ANALYSIS_VERSION = 'rules-v1'
-METHOD = 'Regras determinísticas v1; sem LLM. Evidência = material publicado, não verificação independente.'
+ANALYSIS_VERSION = 'rules-v2'
+METHOD = 'Regras determinísticas v2; sem LLM. Leituras contextuais são hipóteses, não oportunidades confirmadas.'
 
 
 def _clean(value: str | None) -> str:
@@ -53,7 +54,15 @@ def _denied(sentence: str) -> bool:
 def _sentences(item: NewsItem) -> list[str]:
     # Campos separados evitam ligar o título a uma ressalva como se fossem uma frase.
     result = []
-    for field in (item.title, item.description, item.content):
+    if item.translation_status in {'translated', 'original_pt'}:
+        fields = (item.translated_title_pt, item.translated_content_pt)
+    elif item.translation_status == 'partial':
+        status = item.metadata.get('translation', {})
+        fields = (item.translated_title_pt if status.get('title_ok') else item.title,
+                  item.translated_content_pt if status.get('body_ok') else item.content or item.description)
+    else:
+        fields = (item.title, item.description, item.content)
+    for field in fields:
         for sentence in re.split(r'(?<=[.!?;])\s+|\n+', _clean(field)):
             if sentence and sentence not in result:
                 result.append(sentence)
@@ -146,13 +155,25 @@ def inspect_item(item: NewsItem) -> dict:
     quality = 'Detalhada' if len(body) >= 500 and has_body_detail and url and item.published_at else (
         'Parcial' if len(body) >= 180 and has_body_detail and url and item.published_at else 'Limitada')
     excerpt = (matched or cancelled or [s for _, ev in stages for s in ev] or sentences or ['Conteúdo indisponível.'])[0]
+    context = context_for(' '.join(sentences), item.translated_title_pt or item.title, factual, stage,
+                          quantities_from_text(_clean(item.title) + ' ' + body))
+    if not signals and stage not in {'Suspenso/cancelado', 'Múltiplos estágios mencionados'}:
+        if context['matrix_eligible']:
+            implication, action = context['implication'], context['action']
+            if not risks:
+                risk = context['verification']
+            stage = context['event'] or stage
+            signals.extend(context['extra_signals'])
     evidence = {'title': _clean(item.translated_title_pt or item.title), 'source': _clean(item.source_name),
                 'url': url, 'date': item.published_at.strftime('%d/%m/%Y') if item.published_at else 'N/D',
-                'excerpt': excerpt[:600]}
+                'excerpt': excerpt[:600], 'original_excerpt': _clean(item.content or item.description or item.title)[:800],
+                'translation_status': item.translation_status}
     return {'region': item.region, 'vector': evidence['title'], 'stage': stage, 'risk': risk,
             'implication': implication, 'action': action, 'evidence_quality': quality,
             'gaps': gaps, 'evidence': [evidence], 'signal_types': signals,
-            'horizon': 'A confirmar na fonte', 'score': item.score}
+            'horizon': 'A confirmar na fonte', 'score': item.score,
+            'topic': context['topic'], 'topic_key': context['topic_key'], 'quantities': context['quantities'],
+            'matrix_eligible': context['matrix_eligible'] or bool(signals) or bool(risks)}
 
 
 def analyze(items: list[NewsItem], expected_regions: list[str] | None = None) -> dict:
@@ -181,11 +202,19 @@ def analyze(items: list[NewsItem], expected_regions: list[str] | None = None) ->
         else:
             summary += 'Não foi identificada combinação suficiente de sinais para uma implicação comercial específica; revisar as fontes antes de decidir.'
     groups = {
+        'fleet_investment': ('Investimento em frota/recarga', 'As publicações citam investimento associado a frota ou recarga.',
+                             'Hipótese: mapear operadores de frota e infraestrutura de recarga; a disponibilidade de serviços depende dos projetos e contratos de cada ativo.'),
+        'logistics_investment': ('Investimento logístico', 'As publicações citam investimento em portos/logística.',
+                                 'Hipótese: acompanhar operadores e cronogramas logísticos para avaliar manutenção futura; não confirma compras abertas.'),
+        'energy_investment': ('Investimento energético', 'As publicações citam investimento em energia.',
+                              'Hipótese: verificar projetos energéticos e suas exigências operacionais antes de avaliar contratação de serviços.'),
+        'digital_investment': ('Investimento digital', 'As publicações citam investimento em infraestrutura digital.',
+                               'Hipótese: distinguir demanda física de energia/climatização da aquisição de software e identificar os operadores.'),
         'services_procurement': ('Contratação de serviços', 'Editais citam serviços de manutenção/facilities.',
                                  'Hipótese: há objetos potencialmente aderentes em mais de uma publicação; verificar elegibilidade e prazos individualmente.'),
         'asset_expansion': ('Expansão de ativos', 'As publicações mencionam construção/ampliação de ativos.',
                             'Hipótese: a expansão pode abrir demanda futura por serviços; depende de investimento efetivado, cronograma e modelo de contratação.'),
-        'asset_operation': ('Ativos em operação', 'As publicações mencionam inauguração ou início de operação.',
+        'asset_operation': ('Entregas e ativos operacionais citados', 'As publicações mencionam entrega, inauguração ou início de operação de ativos físicos.',
                             'Hipótese: os ativos podem demandar serviços recorrentes; a oportunidade depende dos contratos e operadores existentes.'),
     }
     connector = {'supported': False, 'left': 'Evidências insuficientes para um eixo comum.',
@@ -205,6 +234,11 @@ def analyze(items: list[NewsItem], expected_regions: list[str] | None = None) ->
         attention.append('Sem cobertura aderente no recorte: ' + ', '.join(uncovered) + '; não significa ausência de atividade nesses mercados.')
     if any(s['evidence_quality'] == 'Limitada' for s in signals):
         attention.append('Há notícias com informação limitada; as hipóteses precisam de confirmação na fonte.')
+    failures = sum(i.translation_status in {'failed', 'partial'} for i in items)
+    if failures:
+        attention.append(f'Tradução automática indisponível ou parcial em {failures} notícia(s); os trechos originais estão identificados e não devem ser tratados como tradução PT-BR.')
+    matrix_rows = [s for s in signals if s['matrix_eligible']]
+    excluded = [s for s in signals if not s['matrix_eligible']]
     return {'method': METHOD, 'signals': signals, 'executive_summary': summary,
-            'comparative_rows': signals, 'connector': connector, 'attention': attention,
+            'comparative_rows': matrix_rows, 'matrix_excluded': excluded, 'connector': connector, 'attention': attention,
             'uncovered_regions': uncovered}

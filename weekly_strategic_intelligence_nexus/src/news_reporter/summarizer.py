@@ -3,32 +3,39 @@
 import logging
 
 from news_reporter.models import NewsItem
-from news_reporter.intelligence import analyze
+from news_reporter.intelligence import analyze, _clean
+from news_reporter.translation import ReportTranslator
+from news_reporter.utils.text import detect_language_safe
+import re
 
 logger = logging.getLogger(__name__)
-
-try:
-    from deep_translator import GoogleTranslator
-except Exception:  # noqa: BLE001
-    GoogleTranslator = None
-
 
 class Summarizer:
     def __init__(self, output_language: str = "pt") -> None:
         self.output_language = output_language
-        self._translator = None
-        if GoogleTranslator:
-            try:
-                self._translator = GoogleTranslator(source="auto", target=output_language)
-            except Exception as exc:  # noqa: BLE001
-                logger.warning("Tradutor não inicializado: %s", exc)
+        self._translator = ReportTranslator(target=output_language)
+        self._translation_cache = {}
 
     def summarize(self, items: list[NewsItem]) -> list[NewsItem]:
         for item in items:
-            text = item.normalized_text or item.title
-            item.translated_title_pt = self._translate(item.title)
-
-            base_text_pt = self._translate(text)
+            title = _clean(item.title)
+            body = _clean(item.content or item.description or item.normalized_text or item.title)
+            language = (item.normalized_language or item.raw_language or '').lower()
+            if language in {'', 'unknown', 'any'}:
+                language = (detect_language_safe(title + ' ' + body) or 'unknown').lower()
+            if language.startswith('pt'):
+                item.translated_title_pt, item.translated_content_pt = title, body
+                item.translation_status = 'original_pt'
+            else:
+                item.translated_title_pt = self._translate(title)
+                same_words = lambda value: re.sub(r'\W+', '', value.casefold())
+                item.translated_content_pt = (item.translated_title_pt if same_words(body) == same_words(title)
+                                               else self._translate(body))
+                title_ok = same_words(item.translated_title_pt) != same_words(title)
+                body_ok = same_words(item.translated_content_pt) != same_words(body)
+                item.translation_status = 'translated' if title_ok and body_ok else 'partial' if title_ok or body_ok else 'failed'
+                item.metadata['translation'] = {'title_ok': title_ok, 'body_ok': body_ok, 'target': 'pt-BR'}
+            base_text_pt = item.translated_content_pt or item.translated_title_pt
             sentences = self._split_sentences(base_text_pt)
 
             item.short_summary_pt = self._short_summary(sentences)
@@ -107,14 +114,21 @@ class Summarizer:
 
         if self._translator:
             try:
-                return self._translator.translate(payload)
+                if not hasattr(self, '_translation_cache'):
+                    self._translation_cache = {}
+                if payload not in self._translation_cache:
+                    translated = self._translator.translate(payload)
+                    if not isinstance(translated, str) or not translated.strip():
+                        raise ValueError('Invalid translation response')
+                    self._translation_cache[payload] = translated.strip()
+                return self._translation_cache[payload]
             except Exception as exc:  # noqa: BLE001
-                logger.warning("Falha na tradução automática, mantendo texto original: %s", exc)
+                logger.warning("Tradução indisponível (%s); relatório deve sinalizar o trecho original.", type(exc).__name__)
         return payload
 
     @staticmethod
     def _split_sentences(text: str) -> list[str]:
-        chunks = [s.strip() for s in text.replace("\n", " ").split(".") if s.strip()]
+        chunks = [s.strip().rstrip('.!?') for s in re.split(r'(?<=[.!?])\s+', text.replace('\n', ' ')) if s.strip()]
         return chunks
 
     @staticmethod

@@ -1,5 +1,17 @@
 # Análise por regras — versão 1
 
+## Correção v2 — tradução e matriz contextual
+
+O resumo e a matriz usam título e conteúdo traduzidos para português quando disponíveis; o texto original é mantido nos dados e na evidência expandida. Notícias já detectadas como português não consomem requisições de tradução. O tradutor usa requisições com timeout, cache por execução, rota de contingência e interrupção após falhas consecutivas. Endpoints públicos de tradução não têm SLA: indisponibilidade é exibida no relatório e nos avisos da execução, nunca confundida com tradução bem-sucedida.
+
+A matriz diferencia frota/recarga, portos/logística, saneamento, energia, infraestrutura digital, instalações/facilities, infraestrutura física e mercado imobiliário. Distingue investimentos citados, indicadores, debate/diagnóstico, implantação, entrega e estudos; textos institucionais/treinamento sem objeto comercial e itens sem enquadramento são mantidos nos cards, sem uma linha genérica na matriz. Um assunto reconhecido não é oportunidade confirmada. Perguntas setoriais são verificações, não fatos nem riscos comprovados. Interpretações podem se repetir legitimamente para o mesmo assunto/evento; não há variação de palavras para simular análise.
+
+Valores e percentuais são citados literalmente do material ORIGINAL, com magnitude preservada; não são somados, convertidos, associados automaticamente a um contrato nem usados como tamanho da oportunidade. Magnitudes não reconhecidas são omitidas da extração. Entrega de estudo, curso ou financiamento não é entrega de ativo operacional. A negação é aplicada ao trecho que sustenta o evento, e não apenas ao título.
+
+Em RSS agregados, o veículo informado pelo item passa a ser usado como fonte editorial quando disponível, preservando o ID e nome do feed em metadados. Essa identificação não certifica autoria ou independência.
+
+O cabeçalho HTTP `X-Nexus-Analysis-Version: rules-v2` identifica o código instalado. Relatórios já salvos conservam o conteúdo anterior; gerar um relatório novo para aplicar a correção.
+
 O fluxo de coleta, normalização, filtros, deduplicação, score, perfis, persistência e exportação continua existente. A fachada Nexus utiliza o mesmo pipeline. A nova análise é Python puro, sem chamadas a LLM, sem chave adicional e sem dependência nova. A tradução já existente permanece como antes.
 
 ## Ativação e retorno

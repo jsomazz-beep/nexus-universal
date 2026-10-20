@@ -100,6 +100,7 @@
       <div style="margin-top:8px;"><strong>Destaques por Região:</strong> {{ synthesis.regional_highlights | join(' | ') }}</div>
       {% if strategic.analysis %}
       <div class="small" style="margin-top:12px;">{{ strategic.analysis.method }}</div>
+      {% for note in strategic.analysis.attention if 'Tradução' in note %}<div style="margin-top:8px;color:#b45309;"><strong>{{ note }}</strong></div>{% endfor %}
       {% for s in strategic.analysis.signals[:3] %}
       <div style="margin-top:14px;padding-top:12px;border-top:1px solid {{ theme.card_border }};">
         <strong>{{ s.region }} · {{ s.stage }}</strong> — {{ s.vector }}
@@ -160,15 +161,15 @@
 
     <h2>Matriz Comparativa: Inteligência de Oportunidades</h2>
     {% if strategic.analysis %}
-    <p class="small">Comparação por publicação. A ordem usa o score de relevância existente; não representa risco, retorno ou probabilidade comercial. Horizonte: confirmar na fonte.</p>
+    <p class="small">Leituras por assunto e evento, com hipóteses condicionais. A ordem usa o score de relevância existente; não representa risco, retorno ou probabilidade comercial. Horizonte: confirmar na fonte.</p>
     <div style="overflow-x:auto;">
     <table class="table" style="min-width:740px;table-layout:fixed;">
-      <thead><tr><th style="width:29%;">Evidência e estágio</th><th style="width:24%;">Implicação para o negócio</th><th style="width:22%;">Risco / lacunas</th><th style="width:25%;">Próximo passo</th></tr></thead>
+      <thead><tr><th style="width:29%;">Evidência e estágio</th><th style="width:24%;">Implicação para o negócio</th><th style="width:22%;">Risco / verificações</th><th style="width:25%;">Próximo passo</th></tr></thead>
       <tbody>
       {% for row in strategic.comparative_rows %}
         <tr style="vertical-align:top;overflow-wrap:anywhere;">
-          <td><strong>{{ row.region }}</strong><div style="margin-top:6px;">{{ row.vector }}</div><div style="margin-top:6px;"><strong>{{ row.stage }}</strong></div><div class="small">Completude: {{ row.evidence_quality }}</div>
-          {% for e in row.evidence %}<div class="small" style="margin-top:8px;">{{ e.source }} · {{ e.date }}{% if e.url %} · <a href="{{ e.url }}" target="_blank" rel="noopener noreferrer">Fonte</a>{% endif %}</div><details style="margin-top:6px;"><summary>Trecho publicado</summary><p>{{ e.excerpt }}</p></details>{% endfor %}</td>
+          <td><strong>{{ row.region }} · {{ row.topic }}</strong><div style="margin-top:6px;">{{ row.vector }}</div><div style="margin-top:6px;"><strong>{{ row.stage }}</strong></div><div class="small">Completude: {{ row.evidence_quality }}</div>
+          {% for e in row.evidence %}<div class="small" style="margin-top:8px;">{{ e.source }} · {{ e.date }}{% if e.url %} · <a href="{{ e.url }}" target="_blank" rel="noopener noreferrer">Fonte</a>{% endif %}</div><details style="margin-top:6px;"><summary>{{ 'Trecho traduzido automaticamente' if e.translation_status == 'translated' else 'Trecho original — tradução indisponível/parcial' if e.translation_status in ['failed','partial'] else 'Trecho publicado' }}</summary><p>{{ e.excerpt }}</p>{% if e.translation_status == 'translated' %}<div class="small"><strong>Original preservado:</strong> {{ e.original_excerpt }}</div>{% endif %}</details>{% endfor %}</td>
           <td>{{ row.implication }}</td>
           <td>{{ row.risk }}<details style="margin-top:10px;"><summary>Lacunas de informação</summary><ul>{% for gap in row.gaps %}<li>{{ gap }}</li>{% endfor %}</ul></details></td>
           <td>{{ row.action }}</td>
@@ -177,6 +178,7 @@
       </tbody>
     </table>
     </div>
+    {% if strategic.analysis.matrix_excluded %}<details style="margin-top:12px;"><summary>{{ strategic.analysis.matrix_excluded | length }} notícia(s) sem enquadramento específico — preservadas nos cards, sem linha genérica na matriz</summary><ul>{% for row in strategic.analysis.matrix_excluded %}<li>{{ row.vector }} — confirmar aderência e objeto antes de interpretar.</li>{% endfor %}</ul></details>{% endif %}
     {% else %}
     <table class="table">
       <thead>
@@ -229,6 +231,7 @@
           </div>
           <div class="news-v2-meta">🕒 {{ n.published_at.strftime('%d/%m/%Y, %H:%M:%S') if n.published_at else 'N/D' }}</div>
           <h3 class="news-v2-title">{{ n.translated_title_pt }}</h3>
+          {% if n.translation_status in ['failed','partial'] %}<div style="color:#b45309;font-weight:600;">Tradução PT-BR indisponível ou parcial — conteúdo original identificado.</div>{% endif %}
           <div class="news-v2-summary">{{ n.executive_summary_pt }}</div>
           <div class="news-v2-actions">
             <a class="news-v2-btn" href="{{ n.url | safe_source_url }}" target="_blank" rel="noopener noreferrer">{{ 'Abrir fonte' if strategic.analysis else 'Abrir Análise Técnica' }}</a>

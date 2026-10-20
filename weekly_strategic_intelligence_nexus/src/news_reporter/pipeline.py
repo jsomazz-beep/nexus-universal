@@ -56,6 +56,9 @@ class WeeklyReporterPipeline:
         output_language = self.cfg.project.get("output_language", "pt")
         summarizer = Summarizer(output_language=output_language)
         approved = summarizer.summarize(approved)
+        translation_failures = sum(item.translation_status in {'failed', 'partial'} for item in approved)
+        if translation_failures:
+            filter_logs.append(f'Tradução PT-BR indisponível/parcial em {translation_failures} notícia(s); consultar avisos no relatório.')
         analysis_mode = self.cfg.project.get('analysis_mode', 'rules')
         synthesis = summarizer.weekly_synthesis(approved, expected_regions=self.monitoring.get("regions", []),
                                                analysis_mode=analysis_mode)

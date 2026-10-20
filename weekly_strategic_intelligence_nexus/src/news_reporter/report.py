@@ -360,11 +360,14 @@ class ReportComposer:
             for row in analysis['comparative_rows']:
                 evidence = row['evidence'][0]
                 lines.extend([f"- {row['region']}: {row['vector']}",
+                              f"  Assunto: {row['topic']}",
                               f"  Estágio: {row['stage']} | Evidência: {row['evidence_quality']}",
                               f"  Fato publicado: {evidence['excerpt']}",
                               f"  Fonte: {evidence['source']} | {evidence['date']} | {evidence['url']}",
                               f"  Leitura: {row['implication']}", f"  Risco/barreira: {row['risk']}",
                               f"  Próximo passo: {row['action']}", '  Lacunas: ' + ' '.join(row['gaps'])])
+                if evidence.get('translation_status') == 'translated':
+                    lines.append('  Original preservado: ' + evidence['original_excerpt'])
             lines.extend(['', 'Eixo conector:', analysis['connector']['center'],
                           analysis['connector']['bottom']])
             lines.extend(f"- {e['title']} | {e['url']}" for e in analysis['connector']['evidence'])
