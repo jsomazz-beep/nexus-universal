@@ -25,3 +25,22 @@ Na mesma amostra real anterior de 50 notícias: 42 originais em português e 8 e
 Endpoints públicos de tradução podem bloquear ou falhar; não há SLA nem garantia de qualidade linguística. A evidência original continua acessível, incluindo nomes e valores. Sem LLM, o sistema segue um conjunto finito de regras; mesmos assuntos/eventos podem ter as mesmas perguntas. Não interpretar automaticamente uma notícia setorial como compra disponível. Essa validação não confirma a verdade dos fatos jornalísticos nem corrige todas as limitações dos feeds ou da classificação geográfica.
 
 Relatórios históricos são imutáveis; é necessário gerar um novo relatório após atualizar o código para aplicar a correção.
+
+## Verificação posterior em produção
+
+Código funcional publicado: `3bae1c32f28d60a11822ccd4e3d99e285906e490`, branch `codex/cloud-nexus-render`. A compilação de `src` e `git diff --check` também passaram no checkout isolado da entrega v2.
+
+Em **20/10/2026 às 10h53 BRT (13h53 UTC)**, foi conferido um relatório novo, gerado pelo WebApp publicado com os parâmetros correntes do formulário, 10 fontes e limite de 50 notícias, sem salvar alterações de perfis. A geração recebeu HTTP 303 e o relatório foi recuperado com HTTP 200. O cabeçalho da aplicação identificou `rules-v2`.
+
+| Indicador observado nessa geração | Resultado |
+| --- | --- |
+| Cards curados | 50 |
+| Notícias originalmente em inglês | 25 |
+| Exibição dos títulos desses itens | Português |
+| Indicação de falha de tradução no relatório | Não encontrada |
+| Linhas na matriz | 21 |
+| Leituras textualmente distintas | 13 |
+| Ações textualmente distintas | 8 |
+| Cards preservados sem linha na matriz | 29 |
+
+Essa geração usa dados diferentes da amostra local com 8 itens em inglês e 31 linhas. As contagens não devem ser combinadas. A verificação confirma a saída daquela execução, não disponibilidade permanente do tradutor, revisão linguística de todos os textos ou acurácia comercial. Também não validou novo executável portátil nem recuperação dos dados após reiniciar o serviço.

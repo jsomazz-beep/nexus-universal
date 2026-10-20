@@ -1,90 +1,71 @@
 # Weekly Strategic Intelligence Nexus
 
-Projeto paralelo para evoluir o `weekly_strategic_intelligence_reporter` para uma arquitetura **cloud-first (Nexus-like)**, sem alterar o projeto original.
+Monitoramento de notícias com filtros, perfis reutilizáveis, cards, imagens e relatório executivo. O resumo semanal, a matriz comparativa e o eixo conector usam regras determinísticas, sem chamadas a LLM. A tradução automática utiliza serviço externo e exige internet.
 
-## Objetivos preservados
+Estado documentado em **20/10/2026**: análise `rules-v2`, publicada no commit `3bae1c32f28d60a11822ccd4e3d99e285906e490`. O executável portátil ainda precisa de novo build para incorporar essa versão.
 
-- Paridade funcional com o reporter original
-- WebApp com filtros, perfis, fontes, pacotes geográficos, cards de notícia, fallback de imagem e cards de mercado
-- Build `.exe` portátil para uso local/offline operacional
-- Evolução para deploy em nuvem (GitHub + Render)
+## Documentação
 
-## Execução local (desenvolvimento)
+- [Visão gerencial, responsabilidades e limites](DOCUMENTACAO_SOLUCAO_TI_INOVACAO.md)
+- [Arquitetura e operação](docs/ARQUITETURA_E_OPERACAO.md)
+- [Análise sem LLM: tradução, matriz e evidências](docs/ANALISE_SEM_LLM.md)
+- [Validação da correção v2](docs/VALIDACAO_CORRECAO_TRADUCAO.md)
+- [Estado da migração Nexus](docs/NEXUS_MIGRATION_STATUS.md)
+
+## Execução local
+
+Execute na pasta `weekly_strategic_intelligence_nexus`, com Python 3.11. Os comandos de cópia criam somente arquivos ausentes; configurações existentes devem ser preservadas.
 
 ```powershell
-cd "C:\Users\zigur\OneDrive\Documentos\New project\weekly_strategic_intelligence_nexus"
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-Copy-Item .\config\config.example.yaml .\config\config.yaml -Force
-Copy-Item .\.env.example .\.env -Force
+python -m pip install -r requirements.txt
+if (-not (Test-Path .\config\config.yaml)) {
+    Copy-Item .\config\config.example.yaml .\config\config.yaml
+}
+if (-not (Test-Path .\.env)) {
+    Copy-Item .\.env.example .\.env
+}
 python src\run_embedded_webapp.py
 ```
 
-WebApp local: `http://127.0.0.1:8787`
+Abra [WebApp local](http://127.0.0.1:8787). Ajuste fontes, período, regiões, temas e palavras-chave antes de gerar. A coleta, as cotações e a tradução dependem dos serviços externos; execução local não significa operação integralmente offline.
 
-## Deploy em nuvem (Render)
+## Aplicação publicada
 
-Este repositório já está preparado para Render com:
+[Abrir Nexus no Render](https://weekly-strategic-intelligence-nexus.onrender.com/) · [Relatório atual](https://weekly-strategic-intelligence-nexus.onrender.com/report/current)
 
-- `Dockerfile` cloud-ready
-- `render.yaml` (Blueprint)
-- suporte a `PORT` (padrão Render)
-- browser auto-open desligado no servidor
+Repositório existente: [jsomazz-beep/nexus-universal](https://github.com/jsomazz-beep/nexus-universal). Branch de publicação: `codex/cloud-nexus-render`. O Blueprint na raiz do repositório aponta `rootDir` para `weekly_strategic_intelligence_nexus`, com runtime Docker, plano Free e `autoDeploy: true`.
 
-### 1) Subir no GitHub
+O servidor usa `PORT` quando definido pelo Render. O cabeçalho HTTP `X-Nexus-Analysis-Version: rules-v2` identifica o código instalado; um relatório antigo pode ter sido produzido por uma versão anterior. Gere novo relatório para aplicar as correções.
+
+Não é necessário inicializar outro repositório nem criar outro serviço. Para atualização e reversão, siga o [procedimento de operação](docs/ARQUITETURA_E_OPERACAO.md#publicação-e-reversão).
+
+## Persistência opcional no Supabase
+
+Os scripts abaixo são preparações para uma instalação nova. Em ambiente existente, confira as tabelas antes de executá-los.
+
+| Uso | Script | Configuração opcional |
+| --- | --- | --- |
+| Perfis | [supabase_profiles_setup.sql](docs/supabase_profiles_setup.sql) | `SUPABASE_PROFILES_TABLE=profile_sets`, `SUPABASE_PROFILE_SET_ID=default` |
+| Relatórios HTML | [supabase_reports_setup.sql](docs/supabase_reports_setup.sql) | `SUPABASE_REPORTS_TABLE=intelligence_reports` |
+
+Ambos utilizam `SUPABASE_URL` (URL base do projeto, sem `/rest/v1`) e `SUPABASE_SERVICE_ROLE_KEY` no servidor. Não inclua credenciais em commits, relatórios ou código enviado ao navegador. Sem a configuração remota, os perfis usam armazenamento local. O sistema tenta restaurar até 25 relatórios remotos ao iniciar; falhas remotas podem coexistir com uma geração local bem-sucedida. Veja os detalhes e limites na documentação de operação.
+
+## Verificação e build portátil
 
 ```powershell
-cd "C:\Users\zigur\OneDrive\Documentos\New project\weekly_strategic_intelligence_nexus"
-git init
-git add .
-git commit -m "chore: cloud-ready nexus baseline"
-git branch -M main
-git remote add origin https://github.com/SEU_USUARIO/weekly_strategic_intelligence_nexus.git
-git push -u origin main
+python -m unittest discover -s tests -q
+python -m compileall -q src
+git diff --check
 ```
 
-### 2) Publicar no Render
+A validação v2 registrou **41 testes aprovados**. Os testes com fixtures não substituem a verificação dos serviços externos.
 
-1. Acesse Render e escolha **New + > Blueprint**
-2. Conecte o repositório do GitHub
-3. O Render detecta o `render.yaml` automaticamente
-4. Clique em **Apply** para criar o serviço
-
-URL final: `https://<nome-do-servico>.onrender.com`
-
-## Build `.exe` portátil (mantido)
-
-Script recomendado:
+O fluxo de empacotamento Windows foi preservado:
 
 ```powershell
 scripts\build_onefile_webapp_portable_py311.bat
 ```
 
-Gera:
-
-- `dist\StrategicIntelligenceWebApp.exe`
-
-## Análise sem LLM
-
-Resumo semanal, matriz comparativa e eixo conector agora usam regras determinísticas e evidências do material coletado. Recursos de coleta e interface continuam no fluxo existente. Para regras, limitações e retorno ao conteúdo legado, consulte [docs/ANALISE_SEM_LLM.md](docs/ANALISE_SEM_LLM.md).
-
-## Estrutura principal
-
-- `src/embedded_webapp.py`: webapp embarcado
-- `src/nexus_like/`: facade de orquestração Nexus-like
-- `src/news_reporter/`: núcleo funcional em paridade
-- `render.yaml`: blueprint de deploy cloud
-- `Dockerfile`: container para execução em nuvem
-
-## Perfis em Supabase (opcional, recomendado na nuvem)
-
-1. No Supabase SQL Editor, execute: docs/supabase_profiles_setup.sql`n2. Configure no serviço (Render env vars):
-   - SUPABASE_URL`n   - SUPABASE_SERVICE_ROLE_KEY`n   - opcional: SUPABASE_PROFILES_TABLE=profile_sets`n   - opcional: SUPABASE_PROFILE_SET_ID=default`n3. Sem essas variáveis, o app continua salvando local em data/search_profiles.json.
-
-
-## Relatórios persistentes no Supabase (recomendado em nuvem)
-
-1. No Supabase SQL Editor, execute: docs/supabase_reports_setup.sql`n2. Garanta as env vars no Render:
-   - SUPABASE_URL`n   - SUPABASE_SERVICE_ROLE_KEY`n   - opcional: SUPABASE_REPORTS_TABLE=intelligence_reports`n3. O app salva cada relatório no Supabase e reidrata os últimos no boot (evita sumir após restart).
-
+Saída: `dist/StrategicIntelligenceWebApp.exe`. O script encerra processos do executável anterior e substitui o binário; execute em uma janela de manutenção local. Nenhum novo `.exe` foi construído ou validado na entrega v2.

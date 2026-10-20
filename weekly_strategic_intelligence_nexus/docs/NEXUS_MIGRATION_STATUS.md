@@ -1,24 +1,26 @@
-# Nexus Migration Status
+# Estado da migração Nexus
 
-## Goal
-Migrate `weekly_strategic_intelligence_nexus` to a Nexus-like architecture without losing feature parity from `weekly_strategic_intelligence_reporter`.
+Atualizado em 20/10/2026 para `rules-v2`.
 
-## Decisions Applied
-- Added a Nexus-like orchestration facade in `src/nexus_like/`.
-- Kept execution parity by delegating to the existing `news_reporter` pipeline.
-- Switched runtime entrypoints to the new facade:
-  - `src/main.py`
-  - `src/scheduler.py`
-  - `src/embedded_webapp.py`
-- Improved embedded webapp responsiveness (desktop/mobile) without changing behavior.
+## Implementado
 
-## Functional Parity Status (current)
-- Portable `.exe` build flow: preserved (`packaged_webapp_launcher.py` + `scripts/build_onefile_webapp_portable_py311.bat`).
-- Webapp + filters + profiles: preserved.
-- Source selection + geographic packs (`pack_country_keys`): preserved.
-- News cards + image fallback + market cards: preserved in `news_reporter/report.py`.
+- Entradas web, CLI e scheduler usam a fachada `src/nexus_like/pipeline.py`, que delega a `WeeklyReporterPipeline` em `src/news_reporter/pipeline.py`.
+- O núcleo existente continua responsável por coleta, normalização, filtros, deduplicação, score, síntese e composição.
+- Perfis, fontes, pacotes geográficos, cards, imagens e cotações permanecem no fluxo existente; isso não representa uma certificação exaustiva de paridade em todas as instalações.
+- Resumo semanal, matriz e eixo usam análise por regras; `legacy` oferece a composição anterior.
+- A v2 corrigiu tradução, consumo do texto traduzido pela análise e matriz contextual, preservando originais e avisos de falha.
+- Código publicado no commit `3bae1c32f28d60a11822ccd4e3d99e285906e490`, branch `codex/cloud-nexus-render`.
 
-## Next Migration Steps (safe path)
-1. Move one module at a time from `news_reporter` to `nexus_like` (collectors, filters, scoring, report), keeping adapters.
-2. Add equivalence tests per stage (same inputs => same counts/outputs).
-3. Keep `.exe` pipeline untouched until all stage tests are green.
+## Verificado
+
+41 testes automatizados aprovados, compilação de `src` e verificação de diff na entrega funcional v2. Nova geração de produção em 20/10/2026 confirmou a versão e os resultados registrados na [validação](VALIDACAO_CORRECAO_TRADUCAO.md).
+
+## Ainda não concluído
+
+- Migração integral do núcleo para módulos Nexus: a fachada delega ao núcleo existente.
+- Novo build e validação do executável portátil: o script permanece disponível, mas o binário anterior não incorpora automaticamente a publicação web.
+- Revisão dos feeds sem itens e das ambiguidades geográficas.
+- Histórico estruturado de eventos e comparação temporal.
+- Medição de qualidade e ganho operacional com avaliação humana.
+
+O [plano de 20/10/2026](superpowers/plans/2026-10-20-analise-sem-llm.md) é um registro histórico da implementação inicial; suas contagens intermediárias não substituem o estado atual. Consulte [arquitetura e operação](ARQUITETURA_E_OPERACAO.md) para manutenção.
