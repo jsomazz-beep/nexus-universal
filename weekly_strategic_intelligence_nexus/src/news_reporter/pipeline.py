@@ -56,7 +56,9 @@ class WeeklyReporterPipeline:
         output_language = self.cfg.project.get("output_language", "pt")
         summarizer = Summarizer(output_language=output_language)
         approved = summarizer.summarize(approved)
-        synthesis = summarizer.weekly_synthesis(approved, expected_regions=self.monitoring.get("regions", []))
+        analysis_mode = self.cfg.project.get('analysis_mode', 'rules')
+        synthesis = summarizer.weekly_synthesis(approved, expected_regions=self.monitoring.get("regions", []),
+                                               analysis_mode=analysis_mode)
 
         output_dir = self._resolve_runtime_path(self.runtime.get("output_dir", "output"))
         templates_dir = resolve_templates_dir()
@@ -64,6 +66,7 @@ class WeeklyReporterPipeline:
             templates_dir=templates_dir,
             max_images=int(self.cfg.project.get("max_images", 8)),
             include_images=bool(self.cfg.project.get("include_images", True)),
+            analysis_mode=analysis_mode,
         )
         report_html, report_text, report_path_html = composer.compose(
             approved,

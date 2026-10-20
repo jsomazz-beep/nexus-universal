@@ -8,14 +8,18 @@ from urllib.parse import quote
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from news_reporter.models import NewsItem
+from news_reporter.intelligence import analyze, safe_url
 
 
 class ReportComposer:
-    def __init__(self, templates_dir: str, max_images: int = 8, include_images: bool = True) -> None:
+    def __init__(self, templates_dir: str, max_images: int = 8, include_images: bool = True,
+                 analysis_mode: str = 'rules') -> None:
         self.env = Environment(
             loader=FileSystemLoader(templates_dir),
-            autoescape=select_autoescape(["html", "xml"]),
+            autoescape=select_autoescape(["html", "xml", "j2"]),
         )
+        self.env.filters['safe_source_url'] = safe_url
+        self.analysis_mode = analysis_mode
         self.max_images = max_images
         self.include_images = include_images
 
@@ -42,6 +46,11 @@ class ReportComposer:
         period_start = (report_date - timedelta(days=7)).strftime("%d/%m/%Y")
 
         strategic = self._build_strategic_blocks(items_sorted, period_start, period_end, monitored_regions)
+        synthesis = dict(synthesis)
+        if self.analysis_mode != 'legacy':
+            analysis = strategic['analysis']
+            synthesis.update(executive_summary=analysis['executive_summary'], analysis=analysis,
+                             attention=analysis['attention'])
         theme = self._resolve_theme(theme_name)
 
         template = self.env.get_template("report_email.html.j2")
@@ -194,7 +203,7 @@ class ReportComposer:
 
         source_names = sorted({i.source_name for i in items if i.source_name})
 
-        return {
+        result = {
             "period_start": period_start,
             "period_end": period_end,
             "focus_regions": focus_regions,
@@ -206,6 +215,18 @@ class ReportComposer:
             "connector": connector,
             "sources": source_names,
         }
+        if self.analysis_mode != 'legacy':
+            analysis = analyze(items, focus_regions)
+            result.update(analysis=analysis, comparative_rows=analysis['comparative_rows'],
+                          connector=analysis['connector'])
+            # As antigas frases de efeito cascata não são sustentadas pelas fontes.
+            result['macro'] = {
+                'title': 'Leitura transversal das evidências',
+                'left': analysis['connector']['left'],
+                'right_top': analysis['connector']['right'],
+                'right_bottom': analysis['connector']['center'],
+            }
+        return result
 
     @staticmethod
     def _resolve_focus_regions(items: list[NewsItem], monitored_regions: list[str] | None) -> list[str]:
@@ -333,6 +354,21 @@ class ReportComposer:
             "Destaques:",
         ]
         lines.extend([f"- {i}" for i in synthesis.get("highlights", [])])
+        analysis = synthesis.get('analysis')
+        if analysis:
+            lines.extend(['', analysis['method'], '', 'Matriz comparativa:'])
+            for row in analysis['comparative_rows']:
+                evidence = row['evidence'][0]
+                lines.extend([f"- {row['region']}: {row['vector']}",
+                              f"  Estágio: {row['stage']} | Evidência: {row['evidence_quality']}",
+                              f"  Fato publicado: {evidence['excerpt']}",
+                              f"  Fonte: {evidence['source']} | {evidence['date']} | {evidence['url']}",
+                              f"  Leitura: {row['implication']}", f"  Risco/barreira: {row['risk']}",
+                              f"  Próximo passo: {row['action']}", '  Lacunas: ' + ' '.join(row['gaps'])])
+            lines.extend(['', 'Eixo conector:', analysis['connector']['center'],
+                          analysis['connector']['bottom']])
+            lines.extend(f"- {e['title']} | {e['url']}" for e in analysis['connector']['evidence'])
+            lines.extend(['', 'Limites da análise:'] + analysis['attention'])
         lines.append("")
         lines.append("Notícias selecionadas:")
         for idx, item in enumerate(items, start=1):

@@ -65,6 +65,10 @@ Gera:
 
 - `dist\StrategicIntelligenceWebApp.exe`
 
+## Análise sem LLM
+
+Resumo semanal, matriz comparativa e eixo conector agora usam regras determinísticas e evidências do material coletado. Recursos de coleta e interface continuam no fluxo existente. Para regras, limitações e retorno ao conteúdo legado, consulte [docs/ANALISE_SEM_LLM.md](docs/ANALISE_SEM_LLM.md).
+
 ## Estrutura principal
 
 - `src/embedded_webapp.py`: webapp embarcado

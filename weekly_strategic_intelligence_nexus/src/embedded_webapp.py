@@ -29,6 +29,7 @@ from news_reporter.paths import get_project_root
 from nexus_like.pipeline import NexusCompatiblePipeline
 from news_reporter.runtime import load_env_file
 from news_reporter.supabase_reports import hydrate_local_reports
+from news_reporter.intelligence import ANALYSIS_VERSION
 
 PROJECT_ROOT = get_project_root()
 BUNDLE_ROOT = Path(os.getenv("NEWS_BUNDLE_ROOT", "")).expanduser() if os.getenv("NEWS_BUNDLE_ROOT") else None
@@ -1006,6 +1007,10 @@ def render_page(state: AppState) -> str:
 
 def make_handler(state: AppState):
     class Handler(BaseHTTPRequestHandler):
+        def end_headers(self):
+            self.send_header('X-Nexus-Analysis-Version', ANALYSIS_VERSION)
+            super().end_headers()
+
         def do_GET(self):
             parsed = urlparse(self.path)
             query = parse_qs(parsed.query, keep_blank_values=True)

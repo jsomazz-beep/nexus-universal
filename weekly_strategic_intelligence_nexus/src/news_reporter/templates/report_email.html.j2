@@ -98,6 +98,17 @@
     <div class="card" style="margin-bottom: 14px;">
       <div><strong>Resumo Executivo:</strong> {{ synthesis.executive_summary }}</div>
       <div style="margin-top:8px;"><strong>Destaques por Região:</strong> {{ synthesis.regional_highlights | join(' | ') }}</div>
+      {% if strategic.analysis %}
+      <div class="small" style="margin-top:12px;">{{ strategic.analysis.method }}</div>
+      {% for s in strategic.analysis.signals[:3] %}
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid {{ theme.card_border }};">
+        <strong>{{ s.region }} · {{ s.stage }}</strong> — {{ s.vector }}
+        <div style="margin-top:5px;">{{ s.implication }}</div>
+        <div style="margin-top:5px;"><strong>Próximo passo:</strong> {{ s.action }}</div>
+        {% for e in s.evidence %}<div class="small">{{ e.source }} · {{ e.date }}{% if e.url %} · <a href="{{ e.url }}" target="_blank" rel="noopener noreferrer">Consultar evidência</a>{% endif %}</div>{% endfor %}
+      </div>
+      {% endfor %}
+      {% endif %}
     </div>
     <div class="grid-4">
       {% for c in strategic.signal_cards %}
@@ -110,7 +121,7 @@
       {% endfor %}
     </div>
 
-    <h2>O Choque Macroeconômico: Efeito Cascata</h2>
+    <h2>{{ 'Leitura Transversal: Evidências e Hipóteses' if strategic.analysis else 'O Choque Macroeconômico: Efeito Cascata' }}</h2>
     <div class="macro-wrap">
       <div class="card">
         <h3>{{ strategic.macro.title }}</h3>
@@ -118,11 +129,11 @@
       </div>
       <div>
         <div class="card" style="margin-bottom:12px;">
-          <h3>Retração de Capital e Projetos</h3>
+          <h3>{{ 'Mecanismo observado' if strategic.analysis else 'Retração de Capital e Projetos' }}</h3>
           <div>{{ strategic.macro.right_top }}</div>
         </div>
         <div class="card">
-          <h3>Respostas Mitigatórias do Mercado</h3>
+          <h3>{{ 'Implicação a verificar' if strategic.analysis else 'Respostas Mitigatórias do Mercado' }}</h3>
           <div>{{ strategic.macro.right_bottom }}</div>
         </div>
       </div>
@@ -148,6 +159,25 @@
     {% endfor %}
 
     <h2>Matriz Comparativa: Inteligência de Oportunidades</h2>
+    {% if strategic.analysis %}
+    <p class="small">Comparação por publicação. A ordem usa o score de relevância existente; não representa risco, retorno ou probabilidade comercial. Horizonte: confirmar na fonte.</p>
+    <div style="overflow-x:auto;">
+    <table class="table" style="min-width:740px;table-layout:fixed;">
+      <thead><tr><th style="width:29%;">Evidência e estágio</th><th style="width:24%;">Implicação para o negócio</th><th style="width:22%;">Risco / lacunas</th><th style="width:25%;">Próximo passo</th></tr></thead>
+      <tbody>
+      {% for row in strategic.comparative_rows %}
+        <tr style="vertical-align:top;overflow-wrap:anywhere;">
+          <td><strong>{{ row.region }}</strong><div style="margin-top:6px;">{{ row.vector }}</div><div style="margin-top:6px;"><strong>{{ row.stage }}</strong></div><div class="small">Completude: {{ row.evidence_quality }}</div>
+          {% for e in row.evidence %}<div class="small" style="margin-top:8px;">{{ e.source }} · {{ e.date }}{% if e.url %} · <a href="{{ e.url }}" target="_blank" rel="noopener noreferrer">Fonte</a>{% endif %}</div><details style="margin-top:6px;"><summary>Trecho publicado</summary><p>{{ e.excerpt }}</p></details>{% endfor %}</td>
+          <td>{{ row.implication }}</td>
+          <td>{{ row.risk }}<details style="margin-top:10px;"><summary>Lacunas de informação</summary><ul>{% for gap in row.gaps %}<li>{{ gap }}</li>{% endfor %}</ul></details></td>
+          <td>{{ row.action }}</td>
+        </tr>
+      {% else %}<tr><td colspan="4">Sem evidências suficientes para compor a matriz nesta janela.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
     <table class="table">
       <thead>
         <tr><th>Região</th><th>Vetor de Oportunidade</th><th>Risco / Barreira</th></tr>
@@ -162,6 +192,7 @@
         {% endfor %}
       </tbody>
     </table>
+    {% endif %}
 
     <h2>O Eixo Conector</h2>
     <div class="connector">
@@ -175,17 +206,22 @@
         <div class="node center">{{ strategic.connector.center }}</div>
         <div></div>
       </div>
+      {% if strategic.analysis %}
+      {% for e in strategic.connector.evidence %}<div class="small" style="margin-top:10px;"><a href="{{ e.url }}" target="_blank" rel="noopener noreferrer">{{ e.title }}</a> · {{ e.source }} · {{ e.date }}</div>{% endfor %}
+      {% endif %}
     </div>
 
     <h2>Notícias Curadas</h2>
     <div class="news-grid-cards">
     {% for n in items %}
       <article class="news-v2" id="{{ n.anchor_id }}">
+        {% if n.show_image %}
         <div class="news-v2-media-wrap">
           <img class="news-v2-media" src="{{ n.display_image_url }}" alt="Imagem relativa à notícia" />
           <div class="news-v2-badge">Conteúdo {{ (n.normalized_language or 'N/D') | upper }}</div>
           <div class="news-v2-score">Score {{ n.score }}</div>
         </div>
+        {% endif %}
         <div class="news-v2-body">
           <div class="news-v2-tags">
             <span class="news-v2-tag">{{ (n.themes[0] if n.themes else 'Geral') | upper }}</span>
@@ -195,7 +231,7 @@
           <h3 class="news-v2-title">{{ n.translated_title_pt }}</h3>
           <div class="news-v2-summary">{{ n.executive_summary_pt }}</div>
           <div class="news-v2-actions">
-            <a class="news-v2-btn" href="{{ n.url }}" target="_blank" rel="noopener noreferrer">Abrir Análise Técnica</a>
+            <a class="news-v2-btn" href="{{ n.url | safe_source_url }}" target="_blank" rel="noopener noreferrer">{{ 'Abrir fonte' if strategic.analysis else 'Abrir Análise Técnica' }}</a>
           </div>
         </div>
       </article>
@@ -204,6 +240,10 @@
 
     <h2>Metodologia e Conclusão do Artefato</h2>
     <div class="card">
+      {% if strategic.analysis %}
+      <div><strong>Método:</strong> {{ strategic.analysis.method }}</div>
+      <ul>{% for note in strategic.analysis.attention %}<li>{{ note }}</li>{% endfor %}</ul>
+      {% endif %}
       <div><strong>Período Processado:</strong> {{ strategic.period_start }} a {{ strategic.period_end }}</div>
       <div><strong>Restrição de Ruído:</strong> Relatório destilado para os eventos de maior impacto estratégico.</div>
       <div><strong>Fontes Integradas:</strong> {{ strategic.sources | join(', ') }}</div>

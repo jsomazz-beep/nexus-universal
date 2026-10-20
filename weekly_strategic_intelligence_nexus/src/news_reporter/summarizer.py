@@ -3,6 +3,7 @@
 import logging
 
 from news_reporter.models import NewsItem
+from news_reporter.intelligence import analyze
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,20 @@ class Summarizer:
             item.executive_summary_pt = self._executive_summary(sentences, item)
         return items
 
-    def weekly_synthesis(self, items: list[NewsItem], expected_regions: list[str] | None = None) -> dict[str, str | list[str]]:
+    def weekly_synthesis(self, items: list[NewsItem], expected_regions: list[str] | None = None,
+                         analysis_mode: str = 'rules') -> dict:
+        result = self._legacy_weekly_synthesis(items, expected_regions)
+        if analysis_mode != 'legacy':
+            analysis = analyze(items, expected_regions)
+            result.update(executive_summary=analysis['executive_summary'], analysis=analysis,
+                          attention=analysis['attention'],
+                          trends=['Conexão temática: ' + analysis['connector']['center']]
+                          if analysis['connector']['supported'] else [],
+                          opportunities=[s['vector'] + ' — ' + s['implication']
+                                         for s in analysis['signals'] if s['signal_types']][:5])
+        return result
+
+    def _legacy_weekly_synthesis(self, items: list[NewsItem], expected_regions: list[str] | None = None) -> dict:
         top = sorted(items, key=lambda i: i.score, reverse=True)[:8]
 
         highlights = [f"{i.translated_title_pt} (score {i.score})" for i in top[:5]]
